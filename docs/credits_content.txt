@@ -1,0 +1,66 @@
+© 2026 Pika25 Production
+
+All rights reserved.
+
+License utama:
+MIT License — Donationware
+Free to use, modify, and distribute.
+Voluntary donations are appreciated.
+
+⚙️ Dependencies (Status)
+pillow ✓
+mss ✓
+pystray ✓
+pynput ✓
+👥 Development Team
+Product Manager & QAPM
+Gayuh Marga H.
+Developer & Programmer
+Claudeito Dimitri Anthropocic
+UI/UX Designer Lead
+Клодейто Димитри Антропосик
+Gayuh Marga H.
+QA Lead
+Гаюх Марга Х.
+Quality Assurance
+Rvbxxyn
+ガユー・マルガ・H
+أحمد روبيون
+Басмусин · Dimitry Anthropocic
+📜 License Detail
+
+MIT License — Donationware
+Free to use, modify, and distribute.
+Voluntary donations are appreciated.
+
+🔌 Third-Party Dependencies
+Pillow ≥ 10.0
+HPND License · image processing
+mss ≥ 9.0
+MIT License · screen capture
+pystray ≥ 0.19
+LGPLv3 · system tray
+pynput ≥ 1.7
+LGPLv3 · global hotkey
+pywin32 ≥ 306
+PSF License · [Windows]
+xclip
+GPL License · [Linux]
+osascript
+Apple System · [macOS]
+🛠 Built With
+
+Core:
+
+Python
+Tkinter
+threading, io, os, sys, json, uuid
+pathlib, collections, functools
+
+System Fonts:
+
+Arial
+Calibri
+Helvetica
+DejaVu Sans
+Liberation Sans

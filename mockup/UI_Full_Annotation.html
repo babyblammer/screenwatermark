@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ScreenWatermark Pro v8.0 — Full UI Annotation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+:root {
+  --bg:#0a0a10;--panel:#111118;--card:#16161f;--card2:#1c1c28;
+  --border:#252535;--accent:#6c63ff;--accent2:#ff6584;--success:#43e97b;
+  --text:#e2e2f0;--muted:#5a5a7a;--warn:#f5a623;
+  --ann-order:#f5a623;--ann-var:#43e97b;--ann-method:#6c63ff;
+  --ann-file:#ff6584;--ann-rule:#aaffcc;
+  --font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#04040a;font-family:var(--font);color:var(--text);padding:40px 20px 80px;overflow-x:auto;}
+
+/* ── page header ── */
+.page-hdr{text-align:center;margin-bottom:28px;}
+.page-hdr h1{font-size:16px;font-weight:700;margin-bottom:4px;}
+.page-hdr p{font-size:11px;color:var(--muted);font-family:var(--mono);}
+
+/* ── legend ── */
+.legend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:9.5px;font-family:var(--mono);}
+.ld{width:10px;height:10px;border-radius:2px;}
+
+/* ── section divider ── */
+.sec-divider{margin:40px 0 20px;border-top:1px solid var(--border);padding-top:20px;
+  font-family:var(--mono);font-size:11px;font-weight:600;color:var(--muted);
+  letter-spacing:.1em;text-transform:uppercase;}
+
+/* ── window row ── */
+.win-row{display:flex;gap:32px;align-items:flex-start;margin-bottom:48px;flex-wrap:wrap;}
+
+/* ── app window shell ── */
+.win{background:var(--bg);border-radius:12px;border:1px solid var(--border);
+  box-shadow:0 24px 60px #00000099;overflow:visible;position:relative;flex-shrink:0;}
+.titlebar{height:30px;background:#0c0c18;border-radius:12px 12px 0 0;
+  display:flex;align-items:center;padding:0 12px;gap:6px;border-bottom:1px solid var(--border);}
+.dot{width:10px;height:10px;border-radius:50%;}
+.dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+.tbtitle{flex:1;text-align:center;font-family:var(--mono);font-size:9px;color:#3a3a55;}
+
+/* ── annotation callout ── */
+.ann{position:absolute;display:flex;align-items:center;gap:4px;pointer-events:none;}
+.ann-line{height:1px;background:currentColor;flex-shrink:0;}
+.ann-line::after{content:'';position:absolute;right:-1px;top:-3px;
+  border:3px solid transparent;border-left-color:currentColor;}
+.ann-pill{font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:4px;
+  white-space:nowrap;font-weight:500;border:1px solid;}
+
+/* var annotation */
+.ann.var{color:var(--ann-var);}
+.ann.var .ann-pill{background:#0a150a;border-color:#254525;color:var(--ann-var);}
+/* method annotation */
+.ann.method{color:var(--ann-method);}
+.ann.method .ann-pill{background:#0f0f1e;border-color:#2e2e5e;color:var(--ann-method);}
+/* file annotation */
+.ann.file{color:var(--ann-file);}
+.ann.file .ann-pill{background:#1a0510;border-color:#4a1535;color:var(--ann-file);}
+/* order annotation */
+.ann.order{color:var(--ann-order);}
+.ann.order .ann-pill{background:#1a0f00;border-color:#4a3010;color:var(--ann-order);}
+
+/* pack order badge */
+.pbadge{width:20px;height:20px;border-radius:50%;background:var(--ann-order);
+  color:#1a0a00;font-family:var(--mono);font-size:9px;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── main window widgets ── */
+.hdr{background:var(--panel);height:40px;display:flex;align-items:center;
+  padding:0 12px;gap:8px;border-bottom:1px solid var(--border);position:relative;}
+.app-icon{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#6c63ff,#9d59ff);
+  display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.appname{font-size:11.5px;font-weight:700;}
+.wmbadge{font-size:8px;padding:2px 6px;border-radius:20px;background:#152515;
+  color:var(--success);border:1px solid #254525;font-family:var(--mono);}
+.wmbadge.warn{background:#2a1f08;color:var(--warn);border-color:#4a3518;}
+.wmbadge.off{background:#1a1a26;color:var(--muted);border-color:var(--border);}
+.hbtn{height:26px;padding:0 10px;border-radius:6px;font-size:9px;font-weight:600;
+  border:none;cursor:pointer;font-family:var(--font);}
+.hbtn.primary{background:var(--accent);color:white;margin-left:auto;}
+.hbtn.ghost{background:var(--card);border:1px solid var(--border);color:var(--muted);}
+
+/* scrollable middle */
+.middle{background:var(--bg);padding:10px 10px 6px;
+  display:flex;flex-direction:column;gap:6px;position:relative;
+  border-left:2px solid var(--ann-var);border-right:2px solid var(--ann-var);}
+.middle-tag{position:absolute;top:0;left:-2px;
+  background:var(--ann-var);color:#001a08;
+  font-family:var(--mono);font-size:7.5px;font-weight:700;
+  padding:2px 7px;border-radius:0 0 4px 0;white-space:nowrap;}
+
+/* panel toggle */
+.ptoggle{display:flex;gap:2px;padding:2px;background:var(--card);
+  border:1px solid var(--border);border-radius:7px;width:fit-content;}
+.ptbtn{padding:4px 11px;border-radius:5px;border:none;font-size:9px;
+  font-weight:500;font-family:var(--font);cursor:pointer;}
+.ptbtn.a{background:var(--accent);color:white;}
+.ptbtn:not(.a){background:transparent;color:var(--muted);}
+.hbadge{background:var(--accent2);color:white;font-size:7px;
+  padding:1px 4px;border-radius:8px;font-family:var(--mono);}
+
+/* canvas */
+.canvas{border-radius:8px;border:1px solid var(--border);background:#0c0c18;
+  position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.cgrid{position:absolute;inset:0;
+  background-image:linear-gradient(#181828 1px,transparent 1px),
+  linear-gradient(90deg,#181828 1px,transparent 1px);
+  background-size:28px 28px;opacity:.6;}
+.canvas-inner{z-index:1;text-align:center;font-size:9px;color:#3a3a55;
+  font-family:var(--mono);line-height:1.9;}
+.cwm{position:absolute;bottom:10px;left:10px;width:50px;height:12px;
+  background:#ffffffaa;border-radius:3px;opacity:.5;}
+.cts{position:absolute;bottom:10px;right:10px;background:#000000bb;
+  padding:2px 5px;border-radius:3px;font-family:var(--mono);font-size:7px;color:#ffffffcc;}
+
+/* accordion */
+.acc{background:var(--card);border-radius:8px;border:1px solid var(--border);overflow:hidden;}
+.acc.open{border-color:#2e2e48;}
+.acch{display:flex;align-items:center;gap:6px;padding:7px 10px;cursor:pointer;}
+.accl{font-size:10px;font-weight:600;}
+.accs{flex:1;text-align:right;font-size:8px;color:var(--muted);font-family:var(--mono);}
+.accv{font-size:8px;color:var(--muted);}
+.accb{border-top:1px solid var(--border);padding:7px 10px;display:flex;flex-direction:column;gap:4px;}
+.crow{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.cl{font-size:8px;color:var(--muted);white-space:nowrap;}
+.cpill{display:flex;border-radius:5px;overflow:hidden;border:1px solid var(--border);}
+.cpb{padding:2px 7px;font-size:8px;font-family:var(--font);border:none;cursor:pointer;}
+.cpb.on{background:var(--accent);color:white;}.cpb:not(.on){background:var(--card2);color:var(--muted);}
+.csel{background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:8px;font-family:var(--font);padding:2px 5px;border-radius:4px;}
+.cslid{display:flex;align-items:center;gap:3px;}
+.cslid input{width:52px;height:3px;accent-color:var(--accent);}
+.csv{font-size:8px;color:var(--accent);font-family:var(--mono);}
+.csep{width:1px;height:13px;background:var(--border);}
+.swatch{width:18px;height:18px;border-radius:4px;border:1px solid var(--border);cursor:pointer;}
+
+/* action bar */
+.abar{height:44px;background:var(--panel);border-top:1px solid var(--border);
+  border-radius:0 0 12px 12px;display:flex;align-items:center;padding:0 10px;gap:5px;}
+.stxt{flex:1;font-family:var(--mono);font-size:7.5px;color:var(--muted);}
+.bcopy{height:26px;padding:0 9px;border-radius:5px;background:var(--card);
+  border:1px solid var(--border);color:var(--muted);font-size:8.5px;font-family:var(--font);cursor:pointer;}
+.shotgrp{display:flex;gap:1px;}
+.sbt{height:26px;padding:0 10px;border:none;font-size:9px;font-weight:700;
+  font-family:var(--font);color:white;cursor:pointer;}
+.sbt.fs{background:var(--accent);border-radius:5px 0 0 5px;}
+.sbt.rg{background:#32324e;border-radius:0 5px 5px 0;}
+
+/* settings window */
+.scard{background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;margin-bottom:6px;}
+.scard-title{font-size:8.5px;font-weight:700;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.srow{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:9.5px;}
+.srow-l{flex:1;font-size:9px;color:var(--muted);}
+.schk{width:13px;height:13px;accent-color:var(--accent);}
+.hkpill{background:var(--card2);border:1px solid var(--border);
+  padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:9px;color:var(--accent);}
+.sfooter{background:var(--panel);border-top:1px solid var(--border);
+  border-radius:0 0 12px 12px;padding:8px 12px;display:flex;align-items:center;gap:6px;}
+.sfbtn{height:26px;padding:0 10px;border-radius:6px;font-size:9.5px;
+  font-family:var(--font);cursor:pointer;border:1px solid var(--border);
+  background:var(--card);color:var(--muted);}
+.sfbtn.p{background:var(--accent);border-color:var(--accent);color:white;font-weight:600;margin-left:auto;}
+.sfdiv{width:1px;height:18px;background:var(--border);}
+
+/* history popup */
+.hpopup{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  overflow:hidden;}
+.hpoph{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;border-bottom:1px solid var(--border);}
+.hpopt{font-size:10px;font-weight:600;color:var(--accent);}
+.hthumb{background:var(--card);border:1px solid var(--border);border-radius:6px;
+  overflow:hidden;cursor:pointer;transition:border-color .15s;}
+.hthumb:hover{border-color:var(--accent);}
+.htimg{background:linear-gradient(135deg,#1a1a2e,#2a2240);}
+.htmeta{padding:3px 5px;font-family:var(--mono);font-size:7.5px;color:var(--muted);}
+
+/* countdown */
+.countdown{background:#0a0a10;border:2px solid var(--accent);border-radius:10px;
+  padding:20px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.cdn{font-size:56px;font-weight:700;color:var(--accent);font-family:'DM Sans',sans-serif;line-height:1;}
+.cds{font-size:10px;color:var(--muted);}
+
+/* region selector */
+.regsel{background:#00000066;border:2px dashed var(--accent);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;position:relative;}
+.regsel-rect{border:2px solid var(--accent);background:#6c63ff22;
+  position:absolute;top:20%;left:15%;right:25%;bottom:20%;border-radius:3px;}
+.regsel-txt{font-size:9px;color:rgba(255,255,255,.5);text-align:center;
+  font-family:var(--mono);z-index:1;}
+
+/* credits */
+.credits{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.cred-title{font-size:10px;font-weight:600;color:var(--text);padding:8px 14px;
+  border-bottom:1px solid var(--border);background:var(--panel);}
+.cred-section{padding:10px 14px;border-bottom:1px solid var(--border);text-align:center;}
+.cred-section.left-rows{text-align:left;}
+.cred-sh{font-size:8.5px;font-weight:700;color:var(--accent);text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:6px;text-align:center;}
+.cred-row{display:flex;gap:12px;padding:2px 0;font-size:9.5px;}
+.cred-role{color:var(--muted);width:90px;flex-shrink:0;}
+.cred-name{color:var(--text);}
+
+/* annotation panel */
+.ann-panel{flex:1;min-width:300px;max-width:420px;display:flex;flex-direction:column;gap:10px;}
+.ann-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.ann-card-hdr{background:var(--card2);padding:7px 12px;font-size:9px;font-weight:700;
+  font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.ann-card-body{padding:10px 12px;}
+.ann-table{width:100%;border-collapse:collapse;font-size:9px;font-family:var(--mono);}
+.ann-table th{text-align:left;padding:3px 6px;color:var(--muted);font-size:8px;
+  font-weight:700;border-bottom:1px solid var(--border);letter-spacing:.06em;}
+.ann-table td{padding:5px 6px;border-bottom:1px solid #1a1a28;vertical-align:top;line-height:1.5;}
+.ann-table tr:last-child td{border-bottom:none;}
+.td-var{color:var(--ann-var);}
+.td-method{color:var(--ann-method);}
+.td-file{color:var(--ann-file);}
+.td-note{color:var(--text);font-size:9px;}
+.td-order{color:var(--ann-order);font-weight:700;font-size:11px;}
+.state-tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:8px;margin:1px 2px;}
+.st-ok{background:#0a200a;color:var(--success);border:1px solid #254525;}
+.st-warn{background:#1e1400;color:var(--warn);border:1px solid #4a3a00;}
+.st-off{background:#1a1a24;color:var(--muted);border:1px solid var(--border);}
+.st-dis{background:#1a0a0a;color:#aa5555;border:1px solid #3a1a1a;}
+</style>
+</head>
+<body>
+
+<div class="page-hdr">
+  <h1>ScreenWatermark Pro v8.0 — Full UI Annotation Reference</h1>
+  <p>Every widget · variable · method · file · behavior · state</p>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="ld" style="background:var(--ann-order)"></div>① Pack order</div>
+  <div class="legend-item"><div class="ld" style="background:var(--ann-var)"></div>self.variable_name</div>
+  <div class="legend-item"><div class="ld" style="background:var(--ann-method)"></div>_method_name()</div>
+  <div class="legend-item"><div class="ld" style="background:var(--ann-file)"></div>file location</div>
+  <div class="legend-item"><div class="ld" style="background:var(--success)"></div>state: active/ok</div>
+  <div class="legend-item"><div class="ld" style="background:var(--warn)"></div>state: warning</div>
+  <div class="legend-item"><div class="ld" style="background:#aa5555"></div>state: disabled/error</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ MAIN WINDOW -->
+<div class="sec-divider">① Main Window · ui/main_window.py · ScreenWatermarkApp(ctk.CTk) · 620×580</div>
+
+<div class="win-row">
+  <div class="win" style="width:440px;">
+    <div class="titlebar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="tbtitle">ScreenWatermark Pro</span></div>
+
+    <!-- Header -->
+    <div class="hdr" style="position:relative;">
+      <div class="app-icon">📸</div>
+      <span class="appname">ScreenWatermark Pro</span>
+      <span class="wmbadge">WM ✓</span>
+      <span class="wmbadge warn" style="margin-left:2px;">WM ⚠</span>
+      <span class="wmbadge off" style="margin-left:2px;">WM OFF</span>
+      <button class="hbtn ghost">🕒</button>
+      <button class="hbtn primary">⚙ Settings</button>
+    </div>
+
+    <!-- Middle -->
+    <div class="middle" style="position:relative;">
+      <div class="middle-tag">self.middle_frame = CTkScrollableFrame(h=484) · _build_ui()</div>
+
+      <!-- ① toggle -->
+      <div style="position:relative;padding-top:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="pbadge">①</span>
+          <div class="ptoggle">
+            <button class="ptbtn a">🖼 Preview</button>
+            <button class="ptbtn">🕒 History <span class="hbadge">3</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② canvas -->
+      <div style="position:relative;">
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          <span class="pbadge" style="background:var(--success);color:#001a08;margin-top:6px;">②</span>
+          <div class="canvas" style="flex:1;height:120px;border-color:var(--success);">
+            <div class="cgrid"></div>
+            <div class="cwm"></div>
+            <div class="cts">14/03 09:41</div>
+            <div class="canvas-inner">PREVIEW CANVAS<br>self.preview_wrap<br>tk.Canvas · 320×180<br>pack_propagate(False) !</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ history hidden label -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="pbadge" style="background:#2a2a42;color:#8888aa;">③</span>
+        <div style="flex:1;background:#0f0f18;border:1px dashed #2a2a42;border-radius:6px;padding:6px 10px;">
+          <span style="font-family:var(--mono);font-size:8px;color:#4a4a7a;">self.history_panel_wrap — NOT packed on launch · pack_propagate(False)</span>
+        </div>
+      </div>
+
+      <!-- ④ WM accordion OPEN -->
+      <div style="display:flex;align-items:flex-start;gap:8px;">
+        <span class="pbadge" style="margin-top:4px;">④</span>
+        <div class="acc open" style="flex:1;border-color:var(--accent);">
+          <div class="acch">
+            <span>💧</span><span class="accl">Watermark</span>
+            <span class="accs">Normal · logo.png · 20% · 70% op</span><span class="accv">▲</span>
+          </div>
+          <div class="accb">
+            <div class="crow">
+              <span class="cl">Enable</span>
+              <div class="cpill"><button class="cpb on">ON</button><button class="cpb">OFF</button></div>
+              <div class="csep"></div>
+              <span class="cl">Mode</span>
+              <select class="csel"><option>Normal</option><option>Full</option><option>Pattern</option></select>
+              <div class="csep"></div>
+              <span class="cl">Pos</span>
+              <select class="csel" style="width:80px;"><option>↙ bottom-left</option></select>
+            </div>
+            <div class="crow">
+              <div class="cslid"><span class="cl">Opacity</span><input type="range" min="0" max="100" value="70"><span class="csv">70%</span></div>
+              <div class="csep"></div>
+              <div class="cslid"><span class="cl">Scale</span><input type="range" min="5" max="60" value="20"><span class="csv">20%</span></div>
+              <div class="csep"></div>
+              <span class="cl">File</span>
+              <button style="padding:2px 6px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:7.5px;border-radius:4px;">Choose…</button>
+              <span style="font-size:8px;color:var(--success);font-family:var(--mono);">logo.png</span>
+              <button style="background:none;border:none;color:var(--muted);font-size:9px;cursor:pointer;">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑤ TS accordion CLOSED -->
+      <div style="display:flex;align-items:flex-start;gap:8px;">
+        <span class="pbadge" style="margin-top:4px;">⑤</span>
+        <div class="acc" style="flex:1;">
+          <div class="acch">
+            <span>🕐</span><span class="accl">Timestamp</span>
+            <span class="accs">✓ ↘ · 22px · #FFFFFF</span><span class="accv">▼</span>
+          </div>
+          <!-- body hidden = closed -->
+        </div>
+      </div>
+
+    </div><!-- /middle -->
+
+    <!-- Action bar -->
+    <div class="abar">
+      <span class="stxt">Ready — Print Screen | Ctrl+Shift+F9 | Ctrl+F9</span>
+      <button class="bcopy">📋 Copy</button>
+      <div class="shotgrp">
+        <button class="sbt fs">📸 Fullscreen</button>
+        <button class="sbt rg">✂ Region</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotation panel -->
+  <div class="ann-panel">
+    <!-- header widgets -->
+    <div class="ann-card">
+      <div class="ann-card-hdr" style="color:var(--ann-file);">Header Bar · _build_header()</div>
+      <div class="ann-card-body" style="padding:0;">
+        <table class="ann-table">
+          <tr><th>Widget</th><th>Variable</th><th>Method / Behavior</th><th>File</th></tr>
+          <tr><td>📸 icon</td><td class="td-var">—</td><td class="td-method">static label</td><td class="td-file">main_window.py</td></tr>
+          <tr><td>App name</td><td class="td-var">—</td><td class="td-method">t("app_title")</td><td class="td-file">main_window.py</td></tr>
+          <tr><td>WM badge</td><td class="td-var">self.wm_indicator</td><td class="td-method">_update_wm_indicator()<br><span class="st-ok">WM ✓</span><span class="st-warn">WM ⚠</span><span class="st-off">WM OFF</span></td><td class="td-file">main_window.py</td></tr>
+          <tr><td>🕒 btn</td><td class="td-var">btn_history_icon</td><td class="td-method">→ _show_history_popup()</td><td class="td-file">main_window.py</td></tr>
+          <tr><td>⚙ Settings</td><td class="td-var">btn_settings</td><td class="td-method">→ _open_settings()</td><td class="td-file">main_window.py</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- panel toggle -->
+    <div class="ann-card">
+      <div class="ann-card-hdr" style="color:var(--ann-method);">Panel Toggle · _build_panel_toggle()</div>
+      <div class="ann-card-body" style="padding:0;">
+        <table class="ann-table">
+          <tr><th>Widget</th><th>Variable</th><th>Behavior</th></tr>
+          <tr><td>🖼 Preview btn</td><td class="td-var">btn_panel_preview</td><td class="td-note">→ _switch_panel("preview")<br>Active: fg=ACCENT · Inactive: transparent</td></tr>
+          <tr><td>🕒 History btn</td><td class="td-var">btn_panel_history</td><td class="td-note">→ _switch_panel("history")<br>+ _render_history_panel()</td></tr>
+          <tr><td>Count badge</td><td class="td-var">hist_count_badge</td><td class="td-note">_update_history_badge()<br><span class="st-ok">shows count</span> <span class="st-off">hidden at 0</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- canvas -->
+    <div class="ann-card">
+      <div class="ann-card-hdr" style="color:var(--ann-var);">Preview Canvas · _build_preview_panel()</div>
+      <div class="ann-card-body" style="padding:0;">
+        <table class="ann-table">
+          <tr><th>Item</th><th>Detail</th></tr>
+          <tr><td class="td-var">self.preview_wrap</td><td class="td-note">CTkFrame · h=180 · pack_propagate(False)</td></tr>
+          <tr><td class="td-var">self.preview_canvas</td><td class="td-note">tk.Canvas (NOT CTk) · 320×180</td></tr>
+          <tr><td>Re-render trigger</td><td class="td-note">any var change → 350ms debounce → background thread</td></tr>
+          <tr><td>After screenshot</td><td class="td-note">_update_preview_from_screenshot(img)</td></tr>
+          <tr><td><span class="st-warn">No WM file</span></td><td class="td-note">shows orange hint text</td></tr>
+          <tr><td><span class="st-off">WM disabled</span></td><td class="td-note">shows muted "OFF" text</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- WM accordion -->
+    <div class="ann-card">
+      <div class="ann-card-hdr" style="color:var(--ann-method);">WM Accordion · _build_wm_accordion() · OPEN by default</div>
+      <div class="ann-card-body" style="padding:0;">
+        <table class="ann-table">
+          <tr><th>Widget</th><th>Variable</th><th>Behavior</th></tr>
+          <tr><td>Header click</td><td class="td-var">_wm_acc_open</td><td class="td-note">→ _toggle_wm_accordion() + auto-scroll</td></tr>
+          <tr><td>Summary label</td><td class="td-var">_wm_summary_lbl</td><td class="td-note">→ _update_wm_summary() on every wm_* change</td></tr>
+          <tr><td>Enable pill</td><td class="td-var">wm_enabled</td><td class="td-note">ON/OFF → badge + summary update</td></tr>
+          <tr><td>Mode menu</td><td class="td-var">wm_mode</td><td class="td-note">→ _on_wm_mode_change_inline()<br>Full: hides pos+scale · Pattern: hides pos only</td></tr>
+          <tr><td>Pos menu</td><td class="td-var">wm_position</td><td class="td-note">Normal mode only · hidden in Full/Pattern</td></tr>
+          <tr><td>Opacity slider</td><td class="td-var">wm_opacity</td><td class="td-note">0–100 · preview re-renders</td></tr>
+          <tr><td>Scale slider</td><td class="td-var">wm_scale</td><td class="td-note">5–60 · hidden in Full mode</td></tr>
+          <tr><td>Choose… btn</td><td class="td-var">watermark_path</td><td class="td-note">→ _pick_watermark() → filedialog → invalidate_wm_cache()</td></tr>
+          <tr><td>✕ clear btn</td><td class="td-var">watermark_path=""</td><td class="td-note">→ _clear_watermark_path_inline() → badge → WM ⚠</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- TS accordion -->
+    <div class="ann-card">
+      <div class="ann-card-hdr" style="color:var(--ann-method);">TS Accordion · _build_ts_accordion() · CLOSED by default</div>
+      <div class="ann-card-body" style="padding:0;">
+        <table class="ann-table">
+          <tr><th>Widget</th><th>Variable</th><th>Behavior</th></tr>
+          <tr><td>Header click</td><td class="td-var">_ts_acc_open</td><td class="td-note">→ _toggle_ts_accordion() + auto-scroll<br>Both WM + TS can be open simultaneously</td></tr>
+          <tr><td>Enable pill</td><td class="td-var">ts_enabled</td><td class="td-note">OFF → preview removes TS · summary → "OFF"</td></tr>
+          <tr><td>Outside pill</td><td class="td-var">ts_outside_canvas</td><td class="td-note">ON → screenshot height increases (strip)</td></tr>
+          <tr><td>Pos menu</td><td class="td-var">ts_position</td><td class="td-note">bottom-right / bottom-left / top-right / top-left</td></tr>
+          <tr><td>Font size slider</td><td class="td-var">ts_font_size</td><td class="td-note">10–60px · preview re-renders</td></tr>
+          <tr><td>Color swatch</td><td class="td-var">ts_color</td><td class="td-note">→ colorchooser → btn fg updates</td></tr>
+          <tr><td>BG swatch</td><td class="td-var">ts_bg_color</td><td class="td-note">→ colorchooser → btn fg updates</td></tr>
+          <tr><td>Bold pill</td><td class="td-var">ts_bold</td><td class="td-note">→ preview re-renders</td></tr>
+          <tr><td>Shadow pill</td><td class="td-var">ts_shadow</td><td class="td-note">→ preview re-renders</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- action bar -->
+    <div class="ann-card">
+      <div class="ann-card-hdr" style="color:var(--ann-file);">Action Bar · _build_action_bar()</div>
+      <div class="ann-card-body" style="padding:0;">
+        <table class="ann-table">
+          <tr><th>Widget</th><th>Variable</th><th>Behavior / States</th></tr>
+          <tr><td>Status label</td><td class="td-var">status_var</td><td class="td-note">Default: hotkey summary · updates on all events · restores after 3s</td></tr>
+          <tr><td>📋 Copy btn</td><td class="td-var">btn_copy</td><td class="td-note"><span class="st-dis">disabled</span> on launch · <span class="st-ok">enabled</span> after first screenshot · → _copy_to_clipboard()</td></tr>
+          <tr><td>📸 Fullscreen</td><td class="td-var">btn_fullscreen</td><td class="td-note">→ _trigger_fullscreen() · <span class="st-dis">disabled during capture</span></td></tr>
+          <tr><td>✂ Region</td><td class="td-var">btn_region</td><td class="td-note">→ _trigger_region() · <span class="st-dis">disabled during capture</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /ann-panel -->
+</div>
+
+<!-- ══════════════════════════════════════════════════════ SETTINGS WINDOW -->
+<div class="sec-divider">② Settings Window · ui/settings_window.py · SettingsWindow(ctk.CTkToplevel) · 480×520</div>
+
+<div class="win-row">
+  <div class="win" style="width:380px;">
+    <div class="titlebar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="tbtitle">Settings — ScreenWatermark Pro</span></div>
+    <div class="hdr" style="height:36px;"><span style="font-size:13px;">⚙</span><span style="font-size:11px;font-weight:700;color:var(--accent);">Settings</span></div>
+    <div style="padding:10px;background:var(--bg);display:flex;flex-direction:column;gap:6px;">
+      <!-- Startup -->
+      <div class="scard">
+        <div class="scard-title">Startup</div>
+        <div class="srow"><span class="srow-l">Run at system startup</span><input type="checkbox" class="schk" checked></div>
+        <div class="srow"><span class="srow-l">Start minimized to tray</span><input type="checkbox" class="schk"></div>
+        <div style="font-size:8px;color:var(--success);font-family:var(--mono);margin-top:4px;">✓ Registered in system startup.</div>
+      </div>
+      <!-- Capture -->
+      <div class="scard">
+        <div class="scard-title">Capture</div>
+        <div class="srow"><span class="srow-l">Default mode</span>
+          <div class="cpill"><button class="cpb on" style="font-size:8px;">Fullscreen</button><button class="cpb" style="font-size:8px;">Region</button></div>
+        </div>
+        <div class="srow"><span class="srow-l">Saved region</span><span style="font-size:8px;color:var(--muted);font-family:var(--mono);">(0,0)→(1920,1080)</span><button style="font-size:8px;background:none;border:none;color:var(--muted);cursor:pointer;">↺</button></div>
+        <div class="srow"><span class="srow-l">Capture delay</span>
+          <div class="cslid"><input type="range" min="0" max="10" value="0"><span class="csv">0s</span></div>
+        </div>
+        <div class="srow"><span class="srow-l">Timestamp format</span>
+          <input style="background:var(--card2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:4px;outline:none;flex:1;" value="%d/%m/%Y  %H:%M:%S">
+        </div>
+      </div>
+      <!-- Hotkeys -->
+      <div class="scard">
+        <div class="scard-title">Hotkeys (display only)</div>
+        <div class="srow"><span class="srow-l">Fullscreen Screenshot</span><span class="hkpill">Print Screen</span></div>
+        <div class="srow"><span class="srow-l">Region Screenshot</span><span class="hkpill">Ctrl+Shift+F9</span></div>
+        <div class="srow"><span class="srow-l">Open History</span><span class="hkpill">Ctrl+F9</span></div>
+      </div>
+      <!-- Language -->
+      <div class="scard">
+        <div class="scard-title">Language</div>
+        <div class="srow"><span class="srow-l">UI Language</span>
+          <select class="csel"><option selected>English</option><option>Indonesian</option></select>
+        </div>
+        <div style="font-size:8px;color:var(--muted);font-family:var(--mono);margin-top:4px;">Restart required to apply.</div>
+      </div>
+    </div>
+    <div class="sfooter">
+      <button class="sfbtn">Credits</button>
+      <div class="sfdiv"></div>
+      <button class="sfbtn">↺ Reset</button>
+      <button class="sfbtn p">Close</button>
+    </div>
+  </div>
+
+  <div class="ann-panel">
+    <div class="ann-card">
+      <div class="ann-card-hdr" style="color:var(--ann-file);">Settings Window — All Widgets</div>
+      <div class="ann-card-body" style="padding:0;">
+        <table class="ann-table">
+          <tr><th>Widget</th><th>Variable</th><th>Behavior</th></tr>
+          <tr><td>Run at startup cb</td><td class="td-var">app.run_at_startup</td><td class="td-note">→ set_run_at_startup() [system/startup.py]<br>Failure → revert + messagebox</td></tr>
+          <tr><td>Start minimized cb</td><td class="td-var">app.start_minimized</td><td class="td-note">Saved via autosave. Effect on next --startup launch only.</td></tr>
+          <tr><td>Mode toggle</td><td class="td-var">app.capture_mode</td><td class="td-note">→ app._on_mode_change()</td></tr>
+          <tr><td>↺ Reset region</td><td class="td-var">app._region=None</td><td class="td-note">→ app._reset_region()</td></tr>
+          <tr><td>Delay slider</td><td class="td-var">app.delay_sec</td><td class="td-note">0–10s · >0 triggers CountdownOverlay</td></tr>
+          <tr><td>TS format entry</td><td class="td-var">app.ts_format</td><td class="td-note">strftime format · invalid → safe_strftime() fallback</td></tr>
+          <tr><td>Language menu</td><td class="td-var">app.ui_language</td><td class="td-note">en / id · saved · needs restart</td></tr>
+          <tr><td>Credits btn</td><td>—</td><td class="td-note">→ _open_credits() → CreditsPopup</td></tr>
+          <tr><td>↺ Reset btn</td><td>—</td><td class="td-note">→ _reset_defaults() → all vars = DEFAULT_SETTINGS</td></tr>
+          <tr><td>Close btn</td><td>—</td><td class="td-note">→ _on_close() → _cleanup_traces() → withdraw()</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="ann-card">
+      <div class="ann-card-hdr" style="color:var(--ann-method);">Removed from Settings in v8.0</div>
+      <div class="ann-card-body">
+        <div style="font-family:var(--mono);font-size:9px;color:#7a3a3a;background:#180d0d;border:1px solid #3a1818;border-radius:6px;padding:8px;line-height:2;">
+          ✕ Watermark card → main window WM accordion<br>
+          ✕ Timestamp card → main window TS accordion
+        </div>
+        <div style="margin-top:8px;font-size:9px;color:var(--muted);">ts_format kept in Settings → Capture card (advanced option).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ SECONDARY WINDOWS -->
+<div class="sec-divider">③ Secondary Windows</div>
+
+<div class="win-row" style="align-items:flex-start;">
+
+  <!-- History Popup -->
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--ann-file);">HistoryPopup · ui/history_popup.py · CTkToplevel</div>
+    <div class="hpopup" style="width:340px;">
+      <div class="hpoph"><span class="hpopt">🖼 Screenshot History</span><button style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;">✕</button></div>
+      <div style="display:flex;gap:8px;padding:10px;overflow-x:auto;">
+        <div class="hthumb" style="width:96px;">
+          <div class="htimg" style="height:54px;"></div>
+          <div class="htmeta">09:41 · 1920×1080</div>
+        </div>
+        <div class="hthumb" style="width:96px;opacity:.7;">
+          <div class="htimg" style="height:54px;background:linear-gradient(135deg,#0f1e1a,#1a3228);"></div>
+          <div class="htmeta">09:38 · 1920×1080</div>
+        </div>
+        <div class="hthumb" style="width:96px;opacity:.45;">
+          <div class="htimg" style="height:54px;background:linear-gradient(135deg,#1e1218,#3a1a28);"></div>
+          <div class="htmeta">09:33 · 800×600</div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:6px;font-size:8.5px;color:var(--muted);">Click thumbnail to copy to clipboard</div>
+    </div>
+    <div class="ann-card" style="width:340px;">
+      <div class="ann-card-hdr" style="color:var(--ann-method);">History Popup Behaviors</div>
+      <div class="ann-card-body" style="padding:0;">
+        <table class="ann-table">
+          <tr><th>Event</th><th>Behavior</th></tr>
+          <tr><td>Thumb click</td><td class="td-note">→ _copy_entry() → clipboard → flash green → close 600ms</td></tr>
+          <tr><td>New screenshot</td><td class="td-note">_render() auto-refreshes if popup is open</td></tr>
+          <tr><td>ESC / ✕</td><td class="td-note">_safe_destroy() · guarded by _destroyed flag</td></tr>
+          <tr><td>Empty history</td><td class="td-note">Shows "No screenshots yet." label only</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Countdown Overlay -->
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--ann-file);">CountdownOverlay · ui/overlays.py · tk.Toplevel (NOT CTk)</div>
+    <div class="countdown" style="width:200px;">
+      <div class="cds">Screenshot in…</div>
+      <div class="cdn">3</div>
+      <div class="cds">Press Esc to cancel</div>
+    </div>
+    <div class="ann-card" style="width:200px;">
+      <div class="ann-card-hdr" style="color:var(--ann-method);">Countdown Behaviors</div>
+      <div class="ann-card-body" style="font-size:9px;color:var(--muted);line-height:1.8;">
+        Fullscreen · alpha=0.72<br>
+        overrideredirect=True (no titlebar)<br>
+        Esc → pynput global listener (starts 50ms after open)<br>
+        On Esc → _cancel_countdown()<br>
+        At 0 → _do_screenshot()
+      </div>
+    </div>
+  </div>
+
+  <!-- Region Selector -->
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--ann-file);">RegionSelector · ui/overlays.py · tk.Toplevel (NOT CTk)</div>
+    <div class="regsel" style="width:220px;height:130px;">
+      <div class="regsel-rect"></div>
+      <div class="regsel-txt">Click and drag to select area<br>Escape = Cancel</div>
+    </div>
+    <div class="ann-card" style="width:220px;">
+      <div class="ann-card-hdr" style="color:var(--ann-method);">Region Selector Behaviors</div>
+      <div class="ann-card-body" style="font-size:9px;color:var(--muted);line-height:1.8;">
+        Fullscreen · alpha=0.25 · crosshair<br>
+        Drag → draws selection rect (ACCENT)<br>
+        Release (≥10px) → on_select(x1,y1,x2,y2)<br>
+        Release (&lt;10px) → on_cancel()<br>
+        Esc → pynput listener (60ms delay)
+      </div>
+    </div>
+  </div>
+
+  <!-- Credits Popup -->
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--ann-file);">CreditsPopup · ui/settings_window.py · CTkToplevel</div>
+    <div class="credits" style="width:240px;">
+      <div class="cred-title">Credits — ScreenWatermark Pro</div>
+      <div class="cred-section">
+        <div class="cred-sh">App Info</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:3px;">ScreenWatermark Pro</div>
+        <div style="font-family:var(--mono);font-size:8.5px;color:var(--muted);">v4.0.0</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:4px;">Screenshot utility with watermark<br>& timestamp overlay</div>
+      </div>
+      <div class="cred-section left-rows">
+        <div class="cred-sh">Development Team</div>
+        <div class="cred-row"><span class="cred-role">PM / Design</span><span class="cred-name">[your name]</span></div>
+        <div class="cred-row"><span class="cred-role">Developer</span><span class="cred-name">[programmer name]</span></div>
+        <div class="cred-row"><span class="cred-role">QA</span><span class="cred-name">Gayuh Marga H.</span></div>
+      </div>
+      <div class="cred-section">
+        <div class="cred-sh">License</div>
+        <div style="font-size:9.5px;color:var(--muted);">MIT License</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:3px;">© 2025 [owner name]</div>
+      </div>
+      <div style="padding:10px;text-align:center;">
+        <button class="hbtn primary" style="height:28px;font-size:9.5px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

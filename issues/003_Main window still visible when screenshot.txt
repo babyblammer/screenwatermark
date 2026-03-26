@@ -1,0 +1,12 @@
+BUG: Main Window still visible when screnshot
+DESC: Window restore, user take screenshot, main window fade but still visible and screenshoted with aprox 25% opacity
+STEPS: Bring main window to front, take screenshot. window will disappear but still visible in screenshot image
+EXPECTED: screenshoted image should clean of app screenwatermark window
+ACTUAL: Main window of screenwatermark app still visible with low opacity.
+ENV: Windows 10
+LOGS: -
+SEVERITY: Medium
+NOTES: Fixed - increased screenshot delay times in ui/main_window.py:
+  - Fullscreen mode: 120ms -> 200ms (line 928)
+  - Region mode: 150ms -> 250ms / 250ms -> 350ms if iconic (line 907)
+STATUS: FIXED

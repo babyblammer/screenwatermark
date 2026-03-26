@@ -1,0 +1,9 @@
+BUG: Tray notification is not appear
+DESC: User failed take screenshot due name 'mss' not defined
+STEPS: take screenshot via hotkeys or button in main menu
+EXPECTED: User can take screenshot without errors
+ACTUAL: Pop up show tells that Screenshot gagal : name 'mss' not defined
+ENV: Windows 10
+LOGS: -
+SEVERITY: CRITICAL
+NOTES: please see attachment Screenshot_Track A (M1-M3).png for more details

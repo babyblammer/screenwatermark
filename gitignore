@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# pytest / test output
+.pytest_cache/
+tests/reports/
+tests/assets/test_watermark.png
+*.html
+
+# App runtime files — user-specific, not committed
+.screenwatermark_settings.json
+.screenwatermark_history.json
+.screenwatermark_instance.lock
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# PyInstaller
+*.spec
+dist/
+build/
+
+# Logs
+*.log

@@ -1,0 +1,21 @@
+C:\Users\PIKA25 STICKER2\AppData\Local\Programs\Python\Python313\Lib\site-packages\customtkinter\windows\widgets\core_widget_classes\ctk_base_class.py:179: UserWarning: CTkLabel Warning: Given image is not CTkImage but <class 'PIL.ImageTk.PhotoImage'>. Image can not be scaled on HighDPI displays, use CTkImage instead.
+
+  warnings.warn(f"{type(self).__name__} Warning: Given image is not CTkImage but {type(image)}. Image can not be scaled on HighDPI displays, use CTkImage instead.\n")
+Exception in Tkinter callback
+Traceback (most recent call last):
+  File "C:\Users\PIKA25 STICKER2\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2074, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Users\PIKA25 STICKER2\AppData\Local\Programs\Python\Python313\Lib\site-packages\customtkinter\windows\widgets\ctk_button.py", line 554, in _clicked
+    self._command()
+    ~~~~~~~~~~~~~^^
+  File "D:\Master\Vibecoding 2\screenwatermark\ui\main_window.py", line 530, in _open_settings
+    self._settings_win = SettingsWindow(self)
+                         ~~~~~~~~~~~~~~^^^^^^
+  File "D:\Master\Vibecoding 2\screenwatermark\ui\settings_window.py", line 35, in __init__
+    self._build_ui()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Master\Vibecoding 2\screenwatermark\ui\settings_window.py", line 55, in _build_ui
+    scroll._canvas.configure(highlightthickness=0)
+    ^^^^^^^^^^^^^^
+AttributeError: 'CTkScrollableFrame' object has no attribute '_canvas'

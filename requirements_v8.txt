@@ -1,0 +1,15 @@
+# ScreenWatermark Pro v8.0 Requirements
+# Core dependencies
+pillow>=10.0
+mss>=9.0
+pystray>=0.19
+pynput>=1.7
+pywin32>=306
+
+# UI migration (Phase P0+)
+customtkinter>=5.2.2
+pywinstyles>=1.8
+
+# Testing
+pytest>=7.0
+pytest-html>=3.0

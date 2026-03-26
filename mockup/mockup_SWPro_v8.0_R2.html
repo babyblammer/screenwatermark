@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScreenWatermark Pro v8.0 — Mockup R2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --bg:      #0a0a10;
+  --panel:   #111118;
+  --card:    #16161f;
+  --card2:   #1c1c28;
+  --border:  #252535;
+  --accent:  #6c63ff;
+  --accent2: #ff6584;
+  --success: #43e97b;
+  --text:    #e2e2f0;
+  --muted:   #5a5a7a;
+  --warn:    #f5a623;
+  --radius:  10px;
+  --font:    'DM Sans', sans-serif;
+  --mono:    'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #05050c;
+  font-family: var(--font);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  padding: 52px 32px 64px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow-x: auto;
+}
+
+/* ─── page chrome ─────────────────────────────── */
+.page-label {
+  position: fixed; top: 10px; left: 16px; transform: none;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  color: var(--muted); background: #0a0a10ee;
+  padding: 4px 16px; border-radius: 20px; border: 1px solid var(--border);
+  z-index: 999; pointer-events: none; white-space: nowrap;
+}
+
+/* ─── column labels ───────────────────────────── */
+.col { display: flex; flex-direction: column; gap: 10px; }
+.col-label {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em;
+  color: var(--muted); text-transform: uppercase; text-align: center;
+}
+
+/* ─── window shell ────────────────────────────── */
+.win {
+  border-radius: 13px;
+  border: 1px solid var(--border);
+  box-shadow: 0 40px 100px #00000099, 0 0 0 1px #ffffff06;
+  overflow: hidden;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+
+/* ─── OS titlebar ─────────────────────────────── */
+.titlebar {
+  height: 34px; background: #0c0c18;
+  display: flex; align-items: center; padding: 0 14px;
+  border-bottom: 1px solid var(--border); gap: 8px; user-select: none;
+}
+.dots { display: flex; gap: 6px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; }
+.dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+.tb-title { flex: 1; text-align: center; font-family: var(--mono); font-size: 10.5px; color: #3a3a55; }
+
+/* ─── header bar ──────────────────────────────── */
+.hdr {
+  background: var(--panel); height: 44px;
+  display: flex; align-items: center; padding: 0 14px; gap: 9px;
+  border-bottom: 1px solid var(--border);
+}
+.app-icon {
+  width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0;
+  background: linear-gradient(135deg, #6c63ff, #9d59ff);
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.app-name { font-size: 12.5px; font-weight: 700; letter-spacing: -.01em; color: var(--text); }
+.wm-badge {
+  font-size: 9.5px; padding: 2px 7px; border-radius: 20px;
+  font-family: var(--mono); font-weight: 600;
+  background: #152515; color: var(--success); border: 1px solid #254525;
+  transition: all .2s;
+}
+.wm-badge.warn  { background: #2a1f08; color: var(--warn);   border-color: #4a3518; }
+.wm-badge.off   { background: #1a1a26; color: var(--muted);  border-color: var(--border); }
+.spacer { flex: 1; }
+.hdr-btn {
+  height: 28px; padding: 0 10px; border-radius: 7px;
+  font-size: 10.5px; font-weight: 600; font-family: var(--font);
+  border: 1px solid var(--border); cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 5px;
+}
+.hdr-btn.ghost { background: var(--card); color: var(--muted); }
+.hdr-btn.ghost:hover { color: var(--text); background: var(--card2); }
+.hdr-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.hdr-btn.primary:hover { background: #7d75ff; }
+
+/* ─── scrollable middle section ───────────────── */
+.middle {
+  height: 484px; /* 580 - 44hdr - 52actionbar */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 12px 8px;
+  display: flex; flex-direction: column; gap: 8px;
+  /* slim scrollbar — appears only on overflow */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color .3s;
+}
+.middle:hover {
+  scrollbar-color: var(--accent) transparent;
+}
+.middle::-webkit-scrollbar { width: 5px; }
+.middle::-webkit-scrollbar-track { background: transparent; }
+.middle::-webkit-scrollbar-thumb { background: transparent; border-radius: 5px; }
+.middle:hover::-webkit-scrollbar-thumb { background: var(--accent); }
+
+/* ─── panel toggle ────────────────────────────── */
+.panel-toggle {
+  display: flex; gap: 2px; padding: 3px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 9px; width: fit-content; flex-shrink: 0;
+}
+.ptbtn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 13px; border-radius: 7px; border: none;
+  font-size: 11px; font-weight: 500; font-family: var(--font);
+  cursor: pointer; transition: all .18s; white-space: nowrap;
+  background: transparent; color: var(--muted);
+}
+.ptbtn.active { background: var(--accent); color: white; }
+.ptbtn:not(.active):hover { color: var(--text); }
+.hist-badge {
+  background: var(--accent2); color: white;
+  font-size: 8.5px; font-family: var(--mono); font-weight: 600;
+  padding: 1px 5px; border-radius: 10px; line-height: 1.4;
+  transition: all .2s;
+}
+.hist-badge.zero { display: none; }
+
+/* ─── preview canvas ──────────────────────────── */
+.preview-wrap {
+  border-radius: var(--radius); border: 1px solid var(--border);
+  overflow: hidden; flex-shrink: 0; position: relative;
+  background: #0c0c18; height: 180px;
+}
+.canvas-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(#181828 1px, transparent 1px),
+    linear-gradient(90deg, #181828 1px, transparent 1px);
+  background-size: 36px 36px; opacity: .7;
+}
+.wm-sim {
+  position: absolute; bottom: 16px; left: 16px;
+  width: 58px; height: 18px; border-radius: 3px;
+  background: #ffffffaa; opacity: .5;
+}
+.ts-sim {
+  position: absolute; bottom: 16px; right: 16px;
+  background: #000000bb; padding: 3px 8px; border-radius: 4px;
+  font-family: var(--mono); font-size: 9px; color: #ffffffcc;
+}
+.canvas-hint {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  color: var(--muted); font-size: 10.5px; z-index: 1;
+}
+.canvas-hint .icon { font-size: 20px; opacity: .4; margin-bottom: 2px; }
+.canvas-label-bar {
+  position: absolute; top: 8px; left: 10px;
+  font-family: var(--mono); font-size: 8.5px; color: #3a3a5a;
+  letter-spacing: .06em;
+}
+
+/* ─── history panel ───────────────────────────── */
+.history-panel {
+  border-radius: var(--radius); border: 1px solid var(--border);
+  background: var(--card); flex-shrink: 0;
+  display: none; flex-direction: column;
+  overflow: hidden;
+}
+.history-panel.show { display: flex; }
+.hist-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.hist-topbar-label { font-size: 10.5px; color: var(--muted); font-family: var(--mono); }
+.btn-clear-all {
+  font-size: 9.5px; color: var(--muted); background: none; border: none;
+  cursor: pointer; font-family: var(--font);
+}
+.btn-clear-all:hover { color: var(--accent2); }
+.hist-scroll {
+  display: flex; gap: 8px; padding: 10px 12px;
+  overflow-x: auto; flex: 1;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.hist-scroll::-webkit-scrollbar { height: 3px; }
+.hist-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.hist-item {
+  flex-shrink: 0; width: 108px; border-radius: 7px;
+  border: 1px solid var(--border); overflow: hidden;
+  cursor: pointer; transition: border-color .15s;
+  display: flex; flex-direction: column; background: var(--card2);
+  position: relative;
+}
+.hist-item:hover { border-color: var(--accent); }
+.hist-item.new-flash { border-color: var(--success); }
+.hist-img { height: 60px; flex-shrink: 0; }
+.hist-img.g1 { background: linear-gradient(135deg, #1a1a2e, #2a2240); }
+.hist-img.g2 { background: linear-gradient(135deg, #0f1e1a, #1a3228); }
+.hist-img.g3 { background: linear-gradient(135deg, #1e1218, #3a1a28); }
+.hist-img.g4 { background: linear-gradient(135deg, #1a1a1a, #2a2a2a); }
+.hist-img.g5 { background: linear-gradient(135deg, #101820, #1a2030); }
+.hist-meta {
+  padding: 4px 6px; font-family: var(--mono); font-size: 8px;
+  color: var(--muted); background: #0e0e18; line-height: 1.5;
+}
+.hist-idx {
+  position: absolute; top: 4px; left: 4px;
+  background: var(--accent); color: white;
+  font-size: 7.5px; font-family: var(--mono); font-weight: 600;
+  padding: 1px 4px; border-radius: 3px;
+}
+.hist-new-tag {
+  position: absolute; top: 4px; right: 4px;
+  background: var(--success); color: #001a08;
+  font-size: 7px; font-family: var(--mono); font-weight: 700;
+  padding: 1px 4px; border-radius: 3px; display: none;
+}
+.hist-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 10.5px; color: var(--muted); font-style: italic;
+}
+
+/* ─── accordion ───────────────────────────────── */
+.accordion {
+  border-radius: var(--radius); border: 1px solid var(--border);
+  background: var(--card); overflow: hidden; flex-shrink: 0;
+  transition: border-color .15s;
+}
+.accordion.open { border-color: #2e2e48; }
+
+.acc-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; cursor: pointer; user-select: none;
+  transition: background .12s;
+}
+.acc-header:hover { background: var(--card2); }
+.acc-icon { font-size: 12px; flex-shrink: 0; }
+.acc-label { font-size: 11.5px; font-weight: 600; color: var(--text); }
+.acc-summary {
+  flex: 1; text-align: right;
+  font-size: 9.5px; color: var(--muted); font-family: var(--mono);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 240px;
+}
+.acc-chevron {
+  color: var(--muted); font-size: 9px; flex-shrink: 0;
+  transition: transform .2s; display: inline-block;
+}
+.accordion.open .acc-chevron { transform: rotate(180deg); }
+
+.acc-body {
+  display: none; padding: 0 12px 12px;
+  border-top: 1px solid var(--border);
+}
+.accordion.open .acc-body { display: block; }
+
+/* control rows inside accordion */
+.ctrl-row {
+  display: flex; align-items: center; gap: 6px;
+  flex-wrap: wrap; padding-top: 9px;
+}
+.ctrl-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+.clabel { font-size: 9.5px; color: var(--muted); white-space: nowrap; }
+
+/* pill toggle */
+.pill {
+  display: flex; border-radius: 6px; overflow: hidden;
+  border: 1px solid var(--border); background: var(--card2);
+}
+.pill-btn {
+  padding: 3px 9px; font-size: 9.5px; font-family: var(--font);
+  border: none; background: transparent; color: var(--muted); cursor: pointer;
+  transition: all .12s;
+}
+.pill-btn.on { background: var(--accent); color: white; }
+.pill-btn.on2 { background: #2a2a42; color: var(--text); }
+
+/* dropdown */
+.cselect {
+  background: var(--card2); border: 1px solid var(--border);
+  color: var(--text); font-size: 9.5px; font-family: var(--font);
+  padding: 3px 7px; border-radius: 6px; outline: none; cursor: pointer;
+}
+.cselect:focus { border-color: var(--accent); }
+
+/* slider */
+.slider-grp { display: flex; align-items: center; gap: 5px; }
+.slider-grp input[type=range] {
+  width: 68px; height: 3px; accent-color: var(--accent); cursor: pointer;
+}
+.slider-val {
+  font-size: 9.5px; color: var(--accent); font-family: var(--mono);
+  min-width: 30px; text-align: right;
+}
+
+/* file row */
+.file-btn {
+  padding: 3px 9px; border-radius: 6px; font-size: 9.5px;
+  font-family: var(--font); background: var(--card2);
+  border: 1px solid var(--border); color: var(--text); cursor: pointer;
+}
+.file-btn:hover { background: #222232; }
+.file-name {
+  font-size: 9.5px; font-family: var(--mono); color: var(--success);
+  max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.file-clear {
+  color: var(--muted); background: none; border: none;
+  font-size: 10px; cursor: pointer; line-height: 1;
+}
+.file-clear:hover { color: var(--accent2); }
+
+/* color swatch */
+.swatch {
+  width: 20px; height: 20px; border-radius: 4px;
+  border: 1px solid var(--border); cursor: pointer; flex-shrink: 0;
+}
+
+/* ─── action bar ──────────────────────────────── */
+.action-bar {
+  height: 52px; background: var(--panel);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 12px; gap: 7px;
+}
+.status {
+  flex: 1; font-family: var(--mono); font-size: 9px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color .3s;
+}
+.status.ok { color: var(--success); }
+.btn-copy {
+  height: 32px; padding: 0 12px; border-radius: 7px;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--text); font-size: 10.5px; font-family: var(--font);
+  cursor: pointer; display: flex; align-items: center; gap: 4px;
+  transition: all .15s; white-space: nowrap; flex-shrink: 0;
+}
+.btn-copy:hover { background: var(--card2); }
+.btn-copy:disabled { opacity: .4; cursor: default; }
+
+/* split shot buttons */
+.shot-group { display: flex; gap: 1px; flex-shrink: 0; }
+.shot-btn {
+  height: 32px; padding: 0 14px; border: none; cursor: pointer;
+  font-size: 10.5px; font-weight: 700; font-family: var(--font);
+  color: white; display: flex; align-items: center; gap: 4px;
+  transition: all .15s; white-space: nowrap;
+}
+.shot-btn.fs { background: var(--accent); border-radius: 7px 0 0 7px; }
+.shot-btn.fs:hover { background: #7d75ff; }
+.shot-btn.rg { background: #32324e; border-radius: 0 7px 7px 0; }
+.shot-btn.rg:hover { background: #404060; }
+
+/* ─── settings window ─────────────────────────── */
+.settings-win { width: 460px; }
+
+.settings-body {
+  max-height: 480px; overflow-y: auto; padding: 12px;
+  display: flex; flex-direction: column; gap: 7px;
+  scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
+}
+.settings-body::-webkit-scrollbar { width: 5px; }
+.settings-body::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 5px; }
+
+.scard {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 11px 12px;
+}
+.scard-title {
+  font-size: 9.5px; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 9px;
+}
+.srow {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0; font-size: 10.5px; color: var(--text);
+}
+.srow-label { flex: 1; font-size: 10px; color: var(--muted); }
+.schk { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
+.removed-notice {
+  background: #180d0d; border: 1px solid #3a1818;
+  border-radius: 7px; padding: 8px 12px;
+  font-family: var(--mono); font-size: 9px; color: #7a3a3a; line-height: 1.9;
+}
+.hk-row {
+  display: flex; align-items: center; gap: 8px; padding: 3px 0;
+}
+.hk-label { flex: 1; font-size: 10px; color: var(--muted); }
+.hk-pill {
+  background: var(--card2); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 5px;
+  font-family: var(--mono); font-size: 9.5px; color: var(--accent);
+}
+.sfooter {
+  background: var(--panel); border-top: 1px solid var(--border);
+  padding: 9px 12px; display: flex; align-items: center; gap: 7px;
+}
+.sfooter-btn {
+  height: 28px; padding: 0 11px; border-radius: 6px;
+  font-size: 10.5px; font-family: var(--font); cursor: pointer;
+  border: 1px solid var(--border); background: var(--card); color: var(--muted);
+  transition: all .15s;
+}
+.sfooter-btn:hover { color: var(--text); background: var(--card2); }
+.sfooter-btn.prim {
+  background: var(--accent); border-color: var(--accent); color: white;
+  font-weight: 600; margin-left: auto;
+}
+.sfooter-btn.prim:hover { background: #7d75ff; }
+.sfooter-sep { width: 1px; height: 18px; background: var(--border); }
+
+/* ─── behavior notes panel ────────────────────── */
+.notes-panel {
+  width: 280px; display: flex; flex-direction: column; gap: 10px;
+  align-self: flex-start; margin-top: 56px;
+}
+.note-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px;
+}
+.note-card-title {
+  font-family: var(--mono); font-size: 9px; color: var(--accent);
+  letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px;
+}
+.note-item {
+  display: flex; gap: 8px; align-items: flex-start; padding: 3px 0;
+}
+.note-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); margin-top: 5px; flex-shrink: 0;
+}
+.note-text { font-size: 10px; color: var(--muted); line-height: 1.6; }
+.note-text strong { color: var(--text); }
+.note-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+</style>
+</head>
+<body>
+
+<div class="page-label">ScreenWatermark Pro v8.0 — Mockup R2 · All behaviors confirmed</div>
+
+<!-- ══════════════════ MAIN WINDOW ══════════════════ -->
+<div class="col">
+  <div class="col-label">Main Window · 620 × 580</div>
+
+  <div class="win" style="width:620px;">
+
+    <!-- OS titlebar -->
+    <div class="titlebar">
+      <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+      <span class="tb-title">ScreenWatermark Pro</span>
+      <span style="font-family:var(--mono);font-size:9px;color:#2a2a40;">v8.0</span>
+    </div>
+
+    <!-- Header -->
+    <div class="hdr">
+      <div class="app-icon">📸</div>
+      <span class="app-name">ScreenWatermark Pro</span>
+      <span class="wm-badge" id="wmBadge">WM ✓</span>
+      <div class="spacer"></div>
+      <button class="hdr-btn ghost">🕒</button>
+      <button class="hdr-btn primary" onclick="alert('→ Opens Settings CTkToplevel')">⚙ Settings</button>
+    </div>
+
+    <!-- Middle section — scrollable, 484px -->
+    <div class="middle" id="middle">
+
+      <!-- Panel toggle -->
+      <div class="panel-toggle">
+        <button class="ptbtn active" id="btnPrev" onclick="switchPanel('prev')">
+          🖼 Preview
+        </button>
+        <button class="ptbtn" id="btnHist" onclick="switchPanel('hist')">
+          🕒 History
+          <span class="hist-badge" id="histBadge">3</span>
+        </button>
+      </div>
+
+      <!-- Preview canvas (fixed 180px) -->
+      <div class="preview-wrap" id="panelPrev">
+        <div class="canvas-grid"></div>
+        <div class="canvas-label-bar">PREVIEW CANVAS · 320×180</div>
+        <div class="wm-sim" id="wmSim"></div>
+        <div class="ts-sim" id="tsSim">14/03/2025  09:41:22</div>
+        <div class="canvas-hint">
+          <div class="icon">🖼</div>
+          <span>Watermark + timestamp preview</span>
+          <span style="font-size:9px;color:#2a2a4a;">Updates on every setting change</span>
+        </div>
+      </div>
+
+      <!-- History panel (full, replaces canvas area) -->
+      <div class="history-panel" id="panelHist">
+        <div class="hist-topbar">
+          <span class="hist-topbar-label">5 screenshots · click to copy</span>
+          <button class="btn-clear-all" onclick="clearHistory()">🗑 Clear All</button>
+        </div>
+        <div class="hist-scroll" id="histScroll">
+          <div class="hist-item" onclick="copyHist(this)">
+            <div class="hist-img g1"></div>
+            <div class="hist-meta">09:41 · 1920×1080<br>Full · logo.png</div>
+            <div class="hist-idx">#5</div>
+            <div class="hist-new-tag" id="newTag">NEW</div>
+          </div>
+          <div class="hist-item" onclick="copyHist(this)">
+            <div class="hist-img g2"></div>
+            <div class="hist-meta">09:38 · 1920×1080<br>Full · logo.png</div>
+            <div class="hist-idx">#4</div>
+          </div>
+          <div class="hist-item" onclick="copyHist(this)">
+            <div class="hist-img g3"></div>
+            <div class="hist-meta">09:33 · 1280×720<br>Region</div>
+            <div class="hist-idx">#3</div>
+          </div>
+          <div class="hist-item" style="opacity:.6" onclick="copyHist(this)">
+            <div class="hist-img g4"></div>
+            <div class="hist-meta">09:20 · 800×600<br>Full</div>
+            <div class="hist-idx">#2</div>
+          </div>
+          <div class="hist-item" style="opacity:.35" onclick="copyHist(this)">
+            <div class="hist-img g5"></div>
+            <div class="hist-meta">09:10 · 1920×1080<br>Full</div>
+            <div class="hist-idx">#1</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WM Accordion — open by default on launch -->
+      <div class="accordion open" id="accWM">
+        <div class="acc-header" onclick="toggleAcc('accWM')">
+          <span class="acc-icon">💧</span>
+          <span class="acc-label">Watermark</span>
+          <span class="acc-summary" id="wmSum">Normal · logo.png · 20% · 70% op</span>
+          <span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+
+          <!-- Row 1: Enable / Mode / Position / Opacity -->
+          <div class="ctrl-row">
+            <span class="clabel">Enable</span>
+            <div class="pill">
+              <button class="pill-btn on" id="wmOnBtn" onclick="setWmEnable(true)">ON</button>
+              <button class="pill-btn" id="wmOffBtn" onclick="setWmEnable(false)">OFF</button>
+            </div>
+            <div class="ctrl-sep"></div>
+            <span class="clabel">Mode</span>
+            <select class="cselect" id="wmMode" onchange="onWmMode()">
+              <option>Normal</option>
+              <option>Full</option>
+              <option>Pattern</option>
+            </select>
+            <div class="ctrl-sep" id="posSepA"></div>
+            <span class="clabel" id="posLabelA">Pos</span>
+            <select class="cselect" id="wmPos" onchange="updateWmSum()">
+              <option>↙ bottom-left</option>
+              <option>↘ bottom-right</option>
+              <option>↖ top-left</option>
+              <option>↗ top-right</option>
+              <option>· center</option>
+            </select>
+            <div class="ctrl-sep"></div>
+            <div class="slider-grp">
+              <span class="clabel">Opacity</span>
+              <input type="range" min="0" max="100" value="70"
+                oninput="document.getElementById('wmOpVal').textContent=this.value+'%';updateWmSum()">
+              <span class="slider-val" id="wmOpVal">70%</span>
+            </div>
+          </div>
+
+          <!-- Row 2: Scale / File -->
+          <div class="ctrl-row" id="wmRow2">
+            <div class="slider-grp">
+              <span class="clabel">Scale</span>
+              <input type="range" min="5" max="60" value="20"
+                oninput="document.getElementById('wmScaleVal').textContent=this.value+'%';updateWmSum()">
+              <span class="slider-val" id="wmScaleVal">20%</span>
+            </div>
+            <div class="ctrl-sep"></div>
+            <span class="clabel">File</span>
+            <button class="file-btn" onclick="alert('→ filedialog.askopenfilename()')">Choose…</button>
+            <span class="file-name">logo.png</span>
+            <button class="file-clear" onclick="clearWmFile()">✕</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TS Accordion — collapsed by default on launch -->
+      <div class="accordion" id="accTS">
+        <div class="acc-header" onclick="toggleAcc('accTS')">
+          <span class="acc-icon">🕐</span>
+          <span class="acc-label">Timestamp</span>
+          <span class="acc-summary" id="tsSum">✓ ↘ bottom-right · 22px · #FFFFFF</span>
+          <span class="acc-chevron">▼</span>
+        </div>
+        <div class="acc-body">
+
+          <!-- Row 1: Enable / Outside / Position -->
+          <div class="ctrl-row">
+            <span class="clabel">Enable</span>
+            <div class="pill">
+              <button class="pill-btn on">ON</button>
+              <button class="pill-btn">OFF</button>
+            </div>
+            <div class="ctrl-sep"></div>
+            <span class="clabel">Outside</span>
+            <div class="pill">
+              <button class="pill-btn">ON</button>
+              <button class="pill-btn on">OFF</button>
+            </div>
+            <div class="ctrl-sep"></div>
+            <span class="clabel">Pos</span>
+            <select class="cselect">
+              <option>↘ bottom-right</option>
+              <option>↙ bottom-left</option>
+              <option>↗ top-right</option>
+              <option>↖ top-left</option>
+            </select>
+          </div>
+
+          <!-- Row 2: Font size / Colors / Bold / Shadow -->
+          <div class="ctrl-row">
+            <div class="slider-grp">
+              <span class="clabel">Font</span>
+              <input type="range" min="10" max="60" value="22"
+                oninput="this.nextElementSibling.textContent=this.value+'px'">
+              <span class="slider-val">22px</span>
+            </div>
+            <div class="ctrl-sep"></div>
+            <span class="clabel">Color</span>
+            <div class="swatch" style="background:#ffffff" title="Text color"></div>
+            <span class="clabel">BG</span>
+            <div class="swatch" style="background:#000000" title="BG color"></div>
+            <div class="ctrl-sep"></div>
+            <span class="clabel">Bold</span>
+            <div class="pill">
+              <button class="pill-btn">ON</button>
+              <button class="pill-btn on">OFF</button>
+            </div>
+            <span class="clabel">Shadow</span>
+            <div class="pill">
+              <button class="pill-btn on">ON</button>
+              <button class="pill-btn">OFF</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- spacer so scrollbar has room -->
+      <div style="height:4px;flex-shrink:0;"></div>
+
+    </div><!-- /middle -->
+
+    <!-- Action bar -->
+    <div class="action-bar">
+      <span class="status" id="statusTxt">Ready — Print Screen | Ctrl+Shift+F9 | Ctrl+F9</span>
+      <button class="btn-copy" id="btnCopy" onclick="doCopy()" disabled>📋 Copy</button>
+      <div class="shot-group">
+        <button class="shot-btn fs" id="btnFS" onclick="doShot()">📸 Fullscreen</button>
+        <button class="shot-btn rg" id="btnRG" onclick="alert('→ Opens RegionSelector overlay')">✂ Region</button>
+      </div>
+    </div>
+
+  </div><!-- /win -->
+</div><!-- /col -->
+
+
+<!-- ══════════════════ SETTINGS WINDOW ══════════════════ -->
+<div class="col" style="margin-top:0;">
+  <div class="col-label">Settings · 460 × 520</div>
+
+  <div class="win settings-win">
+    <div class="titlebar">
+      <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+      <span class="tb-title">Settings — ScreenWatermark Pro</span>
+    </div>
+
+    <!-- Settings header -->
+    <div class="hdr" style="height:40px;">
+      <span style="font-size:14px;">⚙</span>
+      <span style="font-size:12px;font-weight:700;color:var(--accent);">Settings</span>
+      <div class="spacer"></div>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted);">v8.0</span>
+    </div>
+
+    <div class="settings-body">
+
+      <!-- Removed notice -->
+      <div class="removed-notice">
+        ✕  Watermark config  →  main window accordion<br>
+        ✕  Timestamp config  →  main window accordion
+      </div>
+
+      <!-- Startup -->
+      <div class="scard">
+        <div class="scard-title">Startup</div>
+        <div class="srow">
+          <span class="srow-label">Run at system startup</span>
+          <input type="checkbox" class="schk" checked>
+        </div>
+        <div class="srow">
+          <span class="srow-label">Start minimized to tray</span>
+          <input type="checkbox" class="schk">
+        </div>
+        <div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:5px;padding-left:1px;">
+          ✓ HKCU\...\Run\ScreenWatermarkPro
+        </div>
+      </div>
+
+      <!-- Capture -->
+      <div class="scard">
+        <div class="scard-title">Capture</div>
+        <div class="srow">
+          <span class="srow-label">Default mode</span>
+          <div class="pill">
+            <button class="pill-btn on" style="font-size:9.5px;">Fullscreen</button>
+            <button class="pill-btn" style="font-size:9.5px;">Region</button>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="srow-label">Saved region</span>
+          <span style="font-size:9px;color:var(--muted);font-family:var(--mono);">(0,0)→(1920,1080)</span>
+          <button style="font-size:9px;background:none;border:none;color:var(--muted);cursor:pointer;">↺ Reset</button>
+        </div>
+        <div class="srow">
+          <span class="srow-label">Capture delay</span>
+          <div class="slider-grp">
+            <input type="range" min="0" max="10" value="0"
+              oninput="this.nextElementSibling.textContent=this.value+'s'">
+            <span class="slider-val">0s</span>
+          </div>
+        </div>
+        <div class="srow" style="margin-top:4px;">
+          <span class="srow-label">Timestamp format</span>
+          <input style="background:var(--card2);border:1px solid var(--border);color:var(--text);
+            font-family:var(--mono);font-size:9px;padding:3px 7px;border-radius:5px;outline:none;width:160px;"
+            value="%d/%m/%Y  %H:%M:%S">
+        </div>
+      </div>
+
+      <!-- Hotkeys -->
+      <div class="scard">
+        <div class="scard-title">Hotkeys</div>
+        <div class="hk-row"><span class="hk-label">Fullscreen Screenshot</span><span class="hk-pill">Print Screen</span></div>
+        <div class="hk-row"><span class="hk-label">Region Screenshot</span><span class="hk-pill">Ctrl+Shift+F9</span></div>
+        <div class="hk-row"><span class="hk-label">Open History</span><span class="hk-pill">Ctrl+F9</span></div>
+        <div style="font-size:9px;color:var(--muted);margin-top:6px;">Hotkeys are fixed. App stays in System Tray when window is closed.</div>
+      </div>
+
+      <!-- Language -->
+      <div class="scard">
+        <div class="scard-title">Language</div>
+        <div class="srow">
+          <span class="srow-label">UI Language</span>
+          <select class="cselect">
+            <option selected>English</option>
+            <option>Indonesian (Bahasa)</option>
+          </select>
+        </div>
+        <div style="font-size:9px;color:var(--muted);margin-top:5px;font-family:var(--mono);">
+          Restart required to apply language change.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="sfooter">
+      <button class="sfooter-btn" onclick="alert('→ Credits popup')">Credits</button>
+      <div class="sfooter-sep"></div>
+      <button class="sfooter-btn" onclick="alert('→ Reset to DEFAULT_SETTINGS')">↺ Reset to Default</button>
+      <button class="sfooter-btn prim" onclick="alert('→ self.withdraw()')">Close</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════ BEHAVIOR NOTES ══════════════════ -->
+<div class="notes-panel" style="margin-top:0px;">
+  <div class="col-label" style="text-align:left;">Confirmed Behaviors</div>
+
+  <div class="note-card">
+    <div class="note-card-title">Accordion</div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Both open simultaneously</strong> — no exclusive logic</div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Launch state:</strong> WM open, TS collapsed</div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>On open:</strong> auto-scroll to reveal the opened accordion</div></div>
+    <div class="note-divider"></div>
+    <div class="note-item"><div class="note-dot" style="background:var(--muted)"></div><div class="note-text">Animation: programmer decides (suggest 150ms height transition)</div></div>
+  </div>
+
+  <div class="note-card">
+    <div class="note-card-title">Window / Scroll</div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>620×580 locked</strong> — never grows</div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Middle section scrolls</strong> (CTkScrollableFrame, 484px) when both accordions open</div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Scrollbar:</strong> 5px max, appears on overflow only, accent color on hover</div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Canvas fixed 180px</strong> — accordions push below, not shrink canvas</div></div>
+  </div>
+
+  <div class="note-card">
+    <div class="note-card-title">Accordion Summary Text</div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>WM:</strong> <code style="font-family:var(--mono);font-size:9px;color:var(--success);">Normal · logo.png · 20% · 70% op</code></div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text">When OFF: <code style="font-family:var(--mono);font-size:9px;color:var(--accent2);">OFF</code></div></div>
+    <div class="note-divider"></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>TS:</strong> <code style="font-family:var(--mono);font-size:9px;color:var(--success);">✓ ↘ · 22px · #FFFFFF</code></div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text">When OFF: <code style="font-family:var(--mono);font-size:9px;color:var(--accent2);">OFF</code></div></div>
+  </div>
+
+  <div class="note-card">
+    <div class="note-card-title">History Panel</div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Full height</strong> — fills canvas area (180px), horizontal scroll for thumbs</div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>New screenshot via hotkey</strong> while on History: stay on History, new thumb prepended at left with "NEW" tag</div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Badge count</strong> hidden at 0, shows count otherwise</div></div>
+  </div>
+
+  <div class="note-card">
+    <div class="note-card-title">WM Mode Visibility Rules</div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Normal:</strong> Position + Scale visible</div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Full:</strong> Position hidden, Scale hidden</div></div>
+    <div class="note-item"><div class="note-dot"></div><div class="note-text"><strong>Pattern:</strong> Position hidden, Scale visible</div></div>
+  </div>
+
+</div>
+
+
+<script>
+// ── Panel toggle ──────────────────────────────────────
+function switchPanel(which) {
+  const prev = document.getElementById('panelPrev');
+  const hist = document.getElementById('panelHist');
+  const bP = document.getElementById('btnPrev');
+  const bH = document.getElementById('btnHist');
+  if (which === 'prev') {
+    prev.style.display = 'block';
+    hist.classList.remove('show');
+    bP.classList.add('active'); bH.classList.remove('active');
+  } else {
+    prev.style.display = 'none';
+    hist.classList.add('show');
+    bH.classList.add('active'); bP.classList.remove('active');
+  }
+}
+
+// ── Accordion toggle with auto-scroll ────────────────
+function toggleAcc(id) {
+  const acc = document.getElementById(id);
+  acc.classList.toggle('open');
+  if (acc.classList.contains('open')) {
+    // auto-scroll to show accordion after open
+    setTimeout(() => {
+      acc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  }
+  updateWmSum();
+}
+
+// ── WM Enable toggle ─────────────────────────────────
+function setWmEnable(on) {
+  document.getElementById('wmOnBtn').classList.toggle('on', on);
+  document.getElementById('wmOffBtn').classList.toggle('on', !on);
+  const badge = document.getElementById('wmBadge');
+  if (!on) { badge.textContent = 'WM OFF'; badge.className = 'wm-badge off'; }
+  else      { badge.textContent = 'WM ✓';  badge.className = 'wm-badge'; }
+  document.getElementById('wmSim').style.display = on ? 'block' : 'none';
+  updateWmSum();
+}
+
+// ── WM Mode change ────────────────────────────────────
+function onWmMode() {
+  const mode = document.getElementById('wmMode').value;
+  const posSep  = document.getElementById('posSepA');
+  const posLbl  = document.getElementById('posLabelA');
+  const posEl   = document.getElementById('wmPos');
+  const row2    = document.getElementById('wmRow2');
+  const isFull  = mode === 'Full';
+  const isPat   = mode === 'Pattern';
+
+  // Position visible in Normal only
+  [posSep, posLbl, posEl].forEach(el => el.style.display = (!isFull && !isPat) ? '' : 'none');
+  // Scale row visible in Normal + Pattern
+  row2.style.display = isFull ? 'none' : 'flex';
+  updateWmSum();
+}
+
+// ── WM Summary ───────────────────────────────────────
+function updateWmSum() {
+  const on = document.getElementById('wmOnBtn').classList.contains('on');
+  if (!on) { document.getElementById('wmSum').textContent = 'OFF'; return; }
+  const mode = document.getElementById('wmMode').value;
+  const op   = document.getElementById('wmOpVal').textContent;
+  const sc   = document.getElementById('wmScaleVal').textContent;
+  document.getElementById('wmSum').textContent =
+    `${mode} · logo.png · ${sc} · ${op} op`;
+}
+
+// ── Clear WM file ─────────────────────────────────────
+function clearWmFile() {
+  const badge = document.getElementById('wmBadge');
+  badge.textContent = 'WM ⚠'; badge.className = 'wm-badge warn';
+  document.getElementById('wmSim').style.display = 'none';
+}
+
+// ── Simulate screenshot ───────────────────────────────
+function doShot() {
+  const btnFS = document.getElementById('btnFS');
+  const btnRG = document.getElementById('btnRG');
+  const btnCopy = document.getElementById('btnCopy');
+  const status = document.getElementById('statusTxt');
+  btnFS.disabled = btnRG.disabled = true;
+  btnFS.style.opacity = '.5'; btnRG.style.opacity = '.5';
+  status.textContent = '⏳ Taking screenshot…';
+  setTimeout(() => {
+    // if on history panel, stay there and flash new item
+    const onHist = document.getElementById('panelHist').classList.contains('show');
+    if (onHist) flashNewThumb();
+    status.textContent = '✓ Screenshot copied to clipboard!';
+    status.className = 'status ok';
+    btnCopy.disabled = false;
+    btnFS.disabled = btnRG.disabled = false;
+    btnFS.style.opacity = btnRG.style.opacity = '1';
+    setTimeout(() => {
+      status.textContent = 'Ready — Print Screen | Ctrl+Shift+F9 | Ctrl+F9';
+      status.className = 'status';
+    }, 2500);
+  }, 900);
+}
+
+// ── Flash new thumb on history panel ─────────────────
+function flashNewThumb() {
+  const newTag = document.getElementById('newTag');
+  const firstItem = document.getElementById('histScroll').querySelector('.hist-item');
+  if (!firstItem) return;
+  newTag.style.display = 'block';
+  firstItem.classList.add('new-flash');
+  document.getElementById('histScroll').scrollTo({ left: 0, behavior: 'smooth' });
+  setTimeout(() => {
+    newTag.style.display = 'none';
+    firstItem.classList.remove('new-flash');
+  }, 2500);
+}
+
+// ── Copy from history ─────────────────────────────────
+function copyHist(el) {
+  const orig = el.style.borderColor;
+  el.style.borderColor = 'var(--success)';
+  const status = document.getElementById('statusTxt');
+  status.textContent = '✓ History item copied to clipboard!';
+  status.className = 'status ok';
+  document.getElementById('btnCopy').disabled = false;
+  setTimeout(() => {
+    el.style.borderColor = orig;
+    status.textContent = 'Ready — Print Screen | Ctrl+Shift+F9 | Ctrl+F9';
+    status.className = 'status';
+  }, 1800);
+}
+
+// ── Clear history ─────────────────────────────────────
+function clearHistory() {
+  const scroll = document.getElementById('histScroll');
+  scroll.innerHTML = '<div class="hist-empty">No screenshots yet</div>';
+  document.getElementById('histBadge').className = 'hist-badge zero';
+}
+
+function doCopy() {
+  const status = document.getElementById('statusTxt');
+  status.textContent = '✓ Copied to clipboard!';
+  status.className = 'status ok';
+  setTimeout(() => {
+    status.textContent = 'Ready — Print Screen | Ctrl+Shift+F9 | Ctrl+F9';
+    status.className = 'status';
+  }, 2000);
+}
+
+// ── Live timestamp in canvas ──────────────────────────
+function tickTs() {
+  const el = document.getElementById('tsSim');
+  const n = new Date();
+  const p = v => String(v).padStart(2,'0');
+  el.textContent = `${p(n.getDate())}/${p(n.getMonth()+1)}/${n.getFullYear()}  ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+}
+setInterval(tickTs, 1000); tickTs();
+</script>
+</body>
+</html>
