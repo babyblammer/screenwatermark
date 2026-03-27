@@ -40,7 +40,7 @@ from i18n import t
 
 
 class ScreenWatermarkApp(ctk.CTk):
-    VERSION = "3.9.1f"
+    VERSION = "4.0.0a"
 
     def __init__(self):
         super().__init__()
@@ -53,6 +53,9 @@ class ScreenWatermarkApp(ctk.CTk):
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self._hide_to_tray)
         
+        # High DPI support
+        self.tk.call('tk', 'scaling', 1.0)
+        
         # Apply CTk styling
         ctk.set_appearance_mode("dark")
         self.configure(fg_color=BG)
@@ -60,34 +63,35 @@ class ScreenWatermarkApp(ctk.CTk):
         # Load settings
         cfg = load_settings()
 
-        # ── Tkinter vars (still using tk vars for compatibility) ──────────────────
-        self.watermark_path    = ctk.StringVar(value=cfg["watermark_path"])
-        self.wm_enabled        = ctk.BooleanVar(value=bool(cfg.get("wm_enabled", True)))
-        self.wm_position       = ctk.StringVar(value=cfg["wm_position"])
-        self.wm_opacity        = ctk.IntVar(value=int(cfg["wm_opacity"]))
-        self.wm_scale          = ctk.IntVar(value=int(cfg["wm_scale"]))
-        self.wm_mode           = ctk.StringVar(value=cfg.get("wm_mode", "normal"))
-        self.ts_enabled        = ctk.BooleanVar(value=bool(cfg["ts_enabled"]))
-        self.ts_format         = ctk.StringVar(value=cfg["ts_format"])
-        self.ts_position       = ctk.StringVar(value=cfg["ts_position"])
-        self.ts_font_size      = ctk.IntVar(value=int(cfg["ts_font_size"]))
-        self.ts_color          = ctk.StringVar(value=cfg["ts_color"])
-        self.ts_bg_color       = ctk.StringVar(value=cfg["ts_bg_color"])
-        self.ts_bg_opacity     = ctk.IntVar(value=int(cfg["ts_bg_opacity"]))
-        self.ts_shadow         = ctk.BooleanVar(value=bool(cfg["ts_shadow"]))
-        self.ts_bold           = ctk.BooleanVar(value=bool(cfg.get("ts_bold", False)))
-        self.ts_outside_canvas = ctk.BooleanVar(value=bool(cfg.get("ts_outside_canvas", False)))
-        self.delay_sec         = ctk.IntVar(value=int(cfg["delay_sec"]))
-        self.hotkey_fullscreen = ctk.StringVar(value=cfg.get("hotkey_fullscreen","<print_screen>"))
-        self.hotkey_region     = ctk.StringVar(value=cfg.get("hotkey_region", "<ctrl>+<shift>+<f9>"))
+        # ── Tkinter vars ─────────────────────────────────────────────────────────
+        self.watermark_path    = tk.StringVar(value=cfg["watermark_path"])
+        self.wm_enabled        = tk.BooleanVar(value=bool(cfg.get("wm_enabled", True)))
+        self.wm_position       = tk.StringVar(value=cfg["wm_position"])
+        self.wm_opacity        = tk.IntVar(value=int(cfg["wm_opacity"]))
+        self.wm_scale          = tk.IntVar(value=int(cfg["wm_scale"]))
+        self.wm_mode           = tk.StringVar(value=cfg.get("wm_mode", "normal"))
+        self.ts_enabled        = tk.BooleanVar(value=bool(cfg["ts_enabled"]))
+        self.ts_format         = tk.StringVar(value=cfg["ts_format"])
+        self.ts_position       = tk.StringVar(value=cfg["ts_position"])
+        self.ts_font_size      = tk.IntVar(value=int(cfg["ts_font_size"]))
+        self.ts_color          = tk.StringVar(value=cfg["ts_color"])
+        self.ts_bg_color       = tk.StringVar(value=cfg["ts_bg_color"])
+        self.ts_bg_opacity     = tk.IntVar(value=int(cfg["ts_bg_opacity"]))
+        self.ts_shadow         = tk.BooleanVar(value=bool(cfg["ts_shadow"]))
+        self.ts_bold           = tk.BooleanVar(value=bool(cfg.get("ts_bold", False)))
+        self.ts_outside_canvas = tk.BooleanVar(value=bool(cfg.get("ts_outside_canvas", False)))
+        self.delay_sec         = tk.IntVar(value=int(cfg["delay_sec"]))
+        self.hotkey_fullscreen = tk.StringVar(value=cfg.get("hotkey_fullscreen","<print_screen>"))
+        self.hotkey_region     = tk.StringVar(value=cfg.get("hotkey_region", "<ctrl>+<shift>+<f9>"))
         _hk_history_raw = cfg.get("hotkey_history", "<ctrl>+<f9>")
         _CONFLICT_HOTKEYS = {"<shift>+<print_screen>", "<ctrl>+<shift>+h>", "<ctrl>+<shift>+h", "<shift>+<f9>", "<ctrl>+<print_screen>"}
         if _hk_history_raw in _CONFLICT_HOTKEYS:
             _hk_history_raw = "<ctrl>+<f9>"
-        self.hotkey_history    = ctk.StringVar(value=_hk_history_raw)
-        self.capture_mode      = ctk.StringVar(value=cfg.get("capture_mode", "fullscreen"))
-        self.run_at_startup    = ctk.BooleanVar(value=bool(cfg.get("run_at_startup", False)))
-        self.start_minimized   = ctk.BooleanVar(value=bool(cfg.get("start_minimized", False)))
+        self.hotkey_history    = tk.StringVar(value=_hk_history_raw)
+        self.capture_mode      = tk.StringVar(value=cfg.get("capture_mode", "fullscreen"))
+        self.run_at_startup    = tk.BooleanVar(value=bool(cfg.get("run_at_startup", False)))
+        self.start_minimized   = tk.BooleanVar(value=bool(cfg.get("start_minimized", False)))
+        self.ui_language       = tk.StringVar(value=cfg.get("language", "en"))
 
         # ── State ────────────────────────────────────────────────────────────────
         self.last_image: "Image.Image | None" = None
@@ -116,6 +120,9 @@ class ScreenWatermarkApp(ctk.CTk):
         self._last_notify_time: float = 0.0
 
         self._hk_recording_active: bool = False
+        self._panel_mode: str = "preview"
+        self._wm_acc_open: bool = True
+        self._ts_acc_open: bool = False
 
         # Build UI
         self._build_ui()
@@ -134,6 +141,13 @@ class ScreenWatermarkApp(ctk.CTk):
         ]
         for v in all_vars:
             v.trace_add("write", lambda *_: self._on_setting_changed())
+
+        self.wm_enabled.trace_add("write", lambda *_: self._update_wm_indicator())
+        self.watermark_path.trace_add("write", lambda *_: self._update_wm_indicator())
+        self.wm_mode.trace_add("write", lambda *_: self._update_wm_mode_pills())
+        self.wm_position.trace_add("write", lambda *_: self._update_wm_position_pills())
+        self.ts_position.trace_add("write", lambda *_: self._update_ts_position_pills())
+        self.ts_outside_canvas.trace_add("write", lambda *_: self._update_ts_outside_pill())
 
         self.after(300, self._refresh_live_preview)
         
@@ -203,12 +217,16 @@ class ScreenWatermarkApp(ctk.CTk):
             self, height=484, fg_color=BG, corner_radius=0,
             scrollbar_button_color=ACCENT, scrollbar_button_hover_color="#7d75ff"
         )
-        self.middle_frame.pack(fill="x", padx=10, pady=(8, 0))
+        self.middle_frame.pack(fill="x", pady=(8, 0))
         
         self._build_panel_toggle()
         self._build_preview_and_history()
         self._build_watermark_controls()
         self._build_timestamp_controls()
+
+        self.preview_wrap.pack(fill="x", padx=12, pady=(0, 8))
+        self.wm_accordion.pack(fill="x", padx=12, pady=(8, 0))
+        self.ts_accordion.pack(fill="x", padx=12, pady=(8, 0))
 
     def _build_panel_toggle(self):
         container = ctk.CTkFrame(self.middle_frame, fg_color=CARD,
@@ -242,33 +260,15 @@ class ScreenWatermarkApp(ctk.CTk):
         self._panel_mode = which
         if which == "preview":
             self.history_panel_wrap.pack_forget()
-            self.preview_wrap.pack(fill="x", pady=(0, 8))
+            self.preview_wrap.pack(fill="x", padx=12, pady=(0, 8))
             self.btn_panel_preview.configure(fg_color=ACCENT, text_color="white")
             self.btn_panel_history.configure(fg_color="transparent", text_color=MUTED)
-            self._set_accordions_enabled(True)
         else:
             self.preview_wrap.pack_forget()
-            self.history_panel_wrap.pack(fill="x", pady=(0, 8))
+            self.history_panel_wrap.pack(fill="x", padx=12, pady=(0, 8))
             self.btn_panel_history.configure(fg_color=ACCENT, text_color="white")
             self.btn_panel_preview.configure(fg_color="transparent", text_color=MUTED)
-            self._set_accordions_enabled(False)
             self._render_history_panel()
-
-    def _set_accordions_enabled(self, enabled: bool):
-        if enabled:
-            for widget in self.wm_accordion.winfo_children():
-                widget.configure(state="normal")
-            for widget in self.ts_accordion.winfo_children():
-                widget.configure(state="normal")
-            self.wm_accordion.configure(border_color=BORDER)
-            self.ts_accordion.configure(border_color=BORDER)
-        else:
-            for widget in self.wm_accordion.winfo_children():
-                widget.configure(state="disabled")
-            for widget in self.ts_accordion.winfo_children():
-                widget.configure(state="disabled")
-            self.wm_accordion.configure(border_color="#1a1a26")
-            self.ts_accordion.configure(border_color="#1a1a26")
 
     def _update_history_badge(self):
         if not hasattr(self, "hist_badge"):
@@ -286,12 +286,9 @@ class ScreenWatermarkApp(ctk.CTk):
             border_width=1, border_color=BORDER)
         self.preview_wrap.pack_propagate(False)
         
-        preview_inner = ctk.CTkFrame(self.preview_wrap, fg_color="#0c0c18")
-        preview_inner.pack(fill="both", expand=True)
-        
-        self.preview_canvas = tk.Canvas(preview_inner, width=PREVIEW_W, height=PREVIEW_H,
+        self.preview_canvas = tk.Canvas(self.preview_wrap, width=PREVIEW_W, height=PREVIEW_H,
                                         bg="#0c0c18", highlightthickness=0)
-        self.preview_canvas.pack(padx=10, pady=10)
+        self.preview_canvas.pack()
         
         self.history_panel_wrap = ctk.CTkFrame(
             self.middle_frame, height=180, fg_color=CARD, corner_radius=10,
@@ -337,7 +334,16 @@ class ScreenWatermarkApp(ctk.CTk):
             img_label = ctk.CTkLabel(item, text="", width=108, height=60)
             img_label.pack()
             
-            meta = ctk.CTkLabel(item, text=entry.get("time", "")[:16],
+            try:
+                thumb_img = Image.open(io.BytesIO(entry["thumb_bytes"]))
+                thumb_img = thumb_img.resize((108, 60), Image.LANCZOS)
+                thumb_tk = ImageTk.PhotoImage(thumb_img)
+                img_label.configure(image=thumb_tk, text="")
+                img_label._image = thumb_tk
+            except Exception:
+                pass
+            
+            meta = ctk.CTkLabel(item, text=entry["timestamp"].strftime("%H:%M  %d/%m"),
                                font=(FONT_MONO, 8), text_color=MUTED)
             meta.pack(pady=2)
 
@@ -369,9 +375,6 @@ class ScreenWatermarkApp(ctk.CTk):
             on_region=self._trigger_region)
         self.shot_btn.pack(side="right", padx=4, pady=10)
         
-        # Legacy btn_shot for compatibility (hidden reference)
-        self.btn_shot = self.shot_btn._btn_fullscreen
-        
         # History button
         ctk.CTkButton(
             bottom_bar, text="Riwayat", font=(FONT, 8),
@@ -386,15 +389,15 @@ class ScreenWatermarkApp(ctk.CTk):
         enabled = self.wm_enabled.get()
         has_file = bool(self.watermark_path.get())
         if not enabled:
-            self.wm_indicator.configure(text="WM: OFF", text_color=MUTED)
+            self.wm_indicator.configure(text="WM OFF", text_color=MUTED)
         elif not has_file:
-            self.wm_indicator.configure(text="WM: ⚠", text_color=WARN)
+            self.wm_indicator.configure(text="WM ⚠", text_color=WARN)
         else:
-            self.wm_indicator.configure(text="WM: ✓", text_color=SUCCESS)
+            self.wm_indicator.configure(text="WM ✓", text_color=SUCCESS)
 
     def _go_history_tab(self):
         """Switch to history tab."""
-        self.tabview.set("Riwayat")
+        self._switch_panel("history")
 
 
 
@@ -567,10 +570,11 @@ class ScreenWatermarkApp(ctk.CTk):
             self.after(0, self._history_smart_open)
 
     def _history_smart_open(self):
-        state = "normal"
+        state = self.wm_state() if hasattr(self, 'wm_state') else "normal"
         if state == "normal":
-            self.lift(); self.focus_force()
-            self.tabview.set("Riwayat")
+            self.lift()
+            self.focus_force()
+            self._switch_panel("history")
         else:
             self._show_history_popup()
 
@@ -685,7 +689,7 @@ class ScreenWatermarkApp(ctk.CTk):
         if self._countdown_job:
             self.after_cancel(self._countdown_job); self._countdown_job = None
 
-        self.btn_shot.configure(state="disabled")
+        self.shot_btn.set_enabled(False)
         self.btn_copy.configure(state="disabled")
 
         mode = self._settings_snapshot.get("capture_mode", "fullscreen")
@@ -730,7 +734,7 @@ class ScreenWatermarkApp(ctk.CTk):
             try: self._screenshot_lock.release()
             except RuntimeError: pass
             self.after(0, self.deiconify)
-            self.btn_shot.configure(state="normal")
+            self.shot_btn.set_enabled(True)
             self.btn_copy.configure(state="normal" if self.last_image else "disabled")
             self.status_var.set(t("failed_opening_region"))
             self.after(2500, self._restore_status)
@@ -774,7 +778,7 @@ class ScreenWatermarkApp(ctk.CTk):
                 self.after(150, self._settings_win.deiconify)
         self._settings_was_visible = False
         self._settings_was_iconic = False
-        self.btn_shot.configure(state="normal")
+        self.shot_btn.set_enabled(True)
         self.btn_copy.configure(state="normal" if self.last_image else "disabled")
         self.status_var.set(t("region_canceled"))
         self.after(2000, self._restore_status)
@@ -818,7 +822,7 @@ class ScreenWatermarkApp(ctk.CTk):
             self.deiconify()
         try: self._screenshot_lock.release()
         except RuntimeError: pass
-        self.btn_shot.configure(state="normal")
+        self.shot_btn.set_enabled(True)
         self.btn_copy.configure(state="normal" if self.last_image else "disabled")
         self.status_var.set(t("countdown_canceled"))
         self.after(2000, self._restore_status)
@@ -893,7 +897,7 @@ class ScreenWatermarkApp(ctk.CTk):
                     _prev = getattr(self, "_main_prev_state", "iconic")
                     if _prev in ("normal", "zoomed"):
                         self.after(0, self.deiconify)
-                self.after(0, lambda: self.btn_shot.configure(state="normal"))
+                self.after(0, lambda: self.shot_btn.set_enabled(True))
 
     def _update_preview_from_screenshot(self, img: "Image.Image"):
         if self._is_quitting: return
@@ -1017,8 +1021,7 @@ class ScreenWatermarkApp(ctk.CTk):
             except: pass
         try:
             mode = self._settings_snapshot.get("capture_mode", "fullscreen")
-            lbl = "Fullscreen" if mode == "fullscreen" else "Region"
-            self.btn_shot.configure(text=lbl)
+            self.shot_btn.set_mode(mode)
         except Exception: pass
 
     def _region_text(self) -> str:
@@ -1042,7 +1045,6 @@ class ScreenWatermarkApp(ctk.CTk):
     def _build_watermark_controls(self):
         from ui.widgets.accordion import CTkAccordion
         self.wm_accordion = CTkAccordion(self.middle_frame, title="💧 Watermark", icon="", open_by_default=True)
-        self.wm_accordion.pack(fill="x", pady=(8, 0))
         body = self.wm_accordion.body
         
         row1 = ctk.CTkFrame(body, fg_color="transparent")
@@ -1065,14 +1067,16 @@ class ScreenWatermarkApp(ctk.CTk):
         ctk.CTkLabel(row1, text="Mode", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
         mode_frame = ctk.CTkFrame(row1, fg_color=CARD2, corner_radius=6)
         mode_frame.pack(side="left", padx=6)
+        self.wm_mode_btns = {}
         for lbl, val in [("Normal", "normal"), ("Full", "full"), ("Pattern", "pattern")]:
             is_active = self.wm_mode.get() == val
-            ctk.CTkButton(mode_frame, text=lbl, width=60, height=22,
+            btn = ctk.CTkButton(mode_frame, text=lbl, width=60, height=22,
                           fg_color=ACCENT if is_active else "transparent",
                           text_color="white" if is_active else MUTED,
                           corner_radius=5, font=(FONT, 9), border_width=0,
-                          command=lambda v=val: self._on_wm_mode_change(v)
-                          ).pack(side="left", padx=2, pady=2)
+                          command=lambda v=val: self._on_wm_mode_change(v))
+            btn.pack(side="left", padx=2, pady=2)
+            self.wm_mode_btns[val] = btn
         
         ctk.CTkLabel(row1, text="Opacity", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
         self.wm_opacity_slider = ctk.CTkSlider(row1, from_=10, to=100, variable=self.wm_opacity,
@@ -1085,14 +1089,16 @@ class ScreenWatermarkApp(ctk.CTk):
         self.wm_pos_row = ctk.CTkFrame(body, fg_color="transparent")
         self.wm_pos_row.pack(fill="x", pady=(0, 4))
         ctk.CTkLabel(self.wm_pos_row, text="Pos", font=(FONT, 9), text_color=MUTED).pack(side="left")
-        for lbl, val in [("\u2199", "bottom-left"), ("\u2198", "bottom-right"), ("\u2196", "top-left"), ("\u2197", "top-right")]:
+        self.wm_pos_btns = {}
+        for lbl, val in [("\u2199", "bottom-left"), ("\u2198", "bottom-right"), ("\u2196", "top-left"), ("\u2197", "top-right"), ("\u25CE", "center")]:
             is_active = self.wm_position.get() == val
-            ctk.CTkButton(self.wm_pos_row, text=lbl, width=36, height=24,
+            btn = ctk.CTkButton(self.wm_pos_row, text=lbl, width=36, height=24,
                           fg_color=ACCENT if is_active else CARD2,
                           text_color="white" if is_active else TEXT,
                           corner_radius=4, font=(FONT, 11), border_width=0,
-                          command=lambda v=val: (self.wm_position.set(v), self._refresh_wm_controls())
-                          ).pack(side="left", padx=2)
+                          command=lambda v=val: (self.wm_position.set(v), self._refresh_wm_controls()))
+            btn.pack(side="left", padx=2)
+            self.wm_pos_btns[val] = btn
         
         self.wm_scale_row = ctk.CTkFrame(body, fg_color="transparent")
         self.wm_scale_row.pack(fill="x", pady=(0, 4))
@@ -1150,6 +1156,24 @@ class ScreenWatermarkApp(ctk.CTk):
         else:
             self.wm_scale_row.pack_forget()
 
+    def _update_wm_mode_pills(self):
+        if not hasattr(self, "wm_mode_btns"):
+            return
+        mode = self.wm_mode.get()
+        for val, btn in self.wm_mode_btns.items():
+            is_active = mode == val
+            btn.configure(fg_color=ACCENT if is_active else "transparent",
+                        text_color="white" if is_active else MUTED)
+
+    def _update_wm_position_pills(self):
+        if not hasattr(self, "wm_pos_btns"):
+            return
+        pos = self.wm_position.get()
+        for val, btn in self.wm_pos_btns.items():
+            is_active = pos == val
+            btn.configure(fg_color=ACCENT if is_active else CARD2,
+                        text_color="white" if is_active else TEXT)
+
     def _update_wm_summary(self):
         if not hasattr(self, "wm_summary"):
             return
@@ -1170,10 +1194,27 @@ class ScreenWatermarkApp(ctk.CTk):
         
         self.wm_summary.configure(text=text, text_color=SUCCESS)
 
+    def _update_ts_outside_pill(self):
+        if not hasattr(self, "ts_outside_btns"):
+            return
+        val = self.ts_outside_canvas.get()
+        for v, btn in self.ts_outside_btns.items():
+            is_active = val == v
+            btn.configure(fg_color=ACCENT if is_active else "transparent",
+                        text_color="white" if is_active else MUTED)
+
+    def _update_ts_position_pills(self):
+        if not hasattr(self, "ts_pos_btns"):
+            return
+        pos = self.ts_position.get()
+        for val, btn in self.ts_pos_btns.items():
+            is_active = pos == val
+            btn.configure(fg_color=ACCENT if is_active else CARD2,
+                        text_color="white" if is_active else TEXT)
+
     def _build_timestamp_controls(self):
         from ui.widgets.accordion import CTkAccordion
         self.ts_accordion = CTkAccordion(self.middle_frame, title="🕐 Timestamp", icon="", open_by_default=False)
-        self.ts_accordion.pack(fill="x", pady=(8, 0))
         body = self.ts_accordion.body
         
         row1 = ctk.CTkFrame(body, fg_color="transparent")
@@ -1196,24 +1237,28 @@ class ScreenWatermarkApp(ctk.CTk):
         ctk.CTkLabel(row1, text="Outside", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
         outside_frame = ctk.CTkFrame(row1, fg_color=CARD2, corner_radius=6)
         outside_frame.pack(side="left", padx=6)
+        self.ts_outside_btns = {}
         for lbl, val in [("ON", True), ("OFF", False)]:
             is_active = self.ts_outside_canvas.get() == val
-            ctk.CTkButton(outside_frame, text=lbl, width=50, height=22,
+            btn = ctk.CTkButton(outside_frame, text=lbl, width=50, height=22,
                           fg_color=ACCENT if is_active else "transparent",
                           text_color="white" if is_active else MUTED,
                           corner_radius=5, font=(FONT, 9), border_width=0,
-                          command=lambda v=val: self.ts_outside_canvas.set(v)
-                          ).pack(side="left", padx=2, pady=2)
+                          command=lambda v=val: self.ts_outside_canvas.set(v))
+            btn.pack(side="left", padx=2, pady=2)
+            self.ts_outside_btns[val] = btn
         
         ctk.CTkLabel(row1, text="Pos", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
+        self.ts_pos_btns = {}
         for lbl, val in [("\u2198", "bottom-right"), ("\u2199", "bottom-left"), ("\u2197", "top-right"), ("\u2196", "top-left")]:
             is_active = self.ts_position.get() == val
-            ctk.CTkButton(row1, text=lbl, width=36, height=22,
+            btn = ctk.CTkButton(row1, text=lbl, width=36, height=22,
                           fg_color=ACCENT if is_active else CARD2,
                           text_color="white" if is_active else TEXT,
                           corner_radius=4, font=(FONT, 11), border_width=0,
-                          command=lambda v=val: self.ts_position.set(v)
-                          ).pack(side="left", padx=2)
+                          command=lambda v=val: self.ts_position.set(v))
+            btn.pack(side="left", padx=2)
+            self.ts_pos_btns[val] = btn
         
         row2 = ctk.CTkFrame(body, fg_color="transparent")
         row2.pack(fill="x", pady=(0, 4))

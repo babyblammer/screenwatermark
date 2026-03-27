@@ -15,17 +15,17 @@ class SplitShotButton(ctk.CTkFrame):
         self._enabled = True
 
         self._btn_fullscreen = ctk.CTkButton(
-            self, text="Fullscreen", width=100, height=36,
+            self, text="Fullscreen", width=95, height=30,
             fg_color=ACCENT, hover_color="#5a52e0",
-            text_color="white", font=(FONT, 11, "bold"),
+            text_color="white", font=(FONT, 10, "bold"),
             corner_radius=6, border_width=0,
             command=self._on_fullscreen_click)
         self._btn_fullscreen.pack(side="left", padx=(6, 3), pady=6)
 
         self._btn_region = ctk.CTkButton(
-            self, text="Region", width=80, height=36,
+            self, text="Region", width=95, height=30,
             fg_color="#32324e", hover_color="#3a3a5e",
-            text_color=TEXT, font=(FONT, 11, "bold"),
+            text_color=TEXT, font=(FONT, 10, "bold"),
             corner_radius=6, border_width=0,
             command=self._on_region_click)
         self._btn_region.pack(side="left", padx=(3, 6), pady=6)

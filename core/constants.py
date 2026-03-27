@@ -20,7 +20,7 @@ ACCENT  = "#6c63ff"
 ACCENT2 = "#ff6584"
 SUCCESS = "#43e97b"
 TEXT    = "#e2e2f0"
-MUTED   = "#5a5a7a"
+MUTED   = "#8a8aaa"
 WARN    = "#f5a623"
 
 FONT      = "Segoe UI"
