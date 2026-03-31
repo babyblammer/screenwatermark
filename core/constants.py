@@ -7,9 +7,12 @@ from pathlib import Path
 
 PREVIEW_W     = 320
 PREVIEW_H     = 180
-HISTORY_MAX   = 5
+HISTORY_MAX   = 8
 SETTINGS_FILE = Path.home() / ".screenwatermark_settings.json"
 HISTORY_FILE  = Path.home() / ".screenwatermark_history.json"
+
+DROPDOWN_W    = 130
+DROPDOWN_H    = 28
 
 BG      = "#0a0a10"
 PANEL   = "#111118"
@@ -20,8 +23,10 @@ ACCENT  = "#6c63ff"
 ACCENT2 = "#ff6584"
 SUCCESS = "#43e97b"
 TEXT    = "#e2e2f0"
-MUTED   = "#5a5a7a"
+MUTED   = "#8a8aaa"
 WARN    = "#f5a623"
+DISABLED_BG = "#15151f"
+DISABLED_TEXT = "#606070"
 
 FONT      = "Segoe UI"
 FONT_MONO = "Consolas"

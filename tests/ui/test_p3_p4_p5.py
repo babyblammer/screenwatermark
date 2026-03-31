@@ -340,12 +340,6 @@ class TestTSAccordion:
         time.sleep(WAIT_SHORT)
         assert app.ts_outside_canvas.get() is True
 
-    def test_ts_position_var(self, app):
-        """TC-P4-005: Position dropdown updates ts_position var."""
-        app.after(0, lambda: app.ts_position.set("top-right"))
-        time.sleep(WAIT_SHORT)
-        assert app.ts_position.get() == "top-right"
-
     def test_ts_font_size_var(self, app):
         """TC-P4-006: Font size slider updates ts_font_size var."""
         app.after(0, lambda: app.ts_font_size.set(40))
@@ -366,11 +360,11 @@ class TestTSAccordion:
 
     def test_ts_summary_updates(self, app):
         """TC-P4-011: TS summary label reflects current state."""
-        app.after(0, lambda: app.ts_position.set("top-left"))
+        app.after(0, lambda: app.ts_enable.set("Outside"))
         app.after(0, app._update_ts_summary)
         time.sleep(WAIT_SHORT)
-        summary = app._ts_summary_lbl.cget("text")
-        assert "↖" in summary, f"Summary should contain ↖, got '{summary}'"
+        summary = app.ts_summary.cget("text")
+        assert "Outside" in summary, f"Summary should contain 'Outside', got '{summary}'"
 
     def test_ts_settings_saved(self, app):
         """TC-P4-012: TS font size change saves to JSON."""

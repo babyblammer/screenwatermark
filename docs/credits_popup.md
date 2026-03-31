@@ -24,7 +24,7 @@ CreditsPopup
 ├── Titlebar: "Credits — ScreenWatermark Pro"  (left-aligned)
 ├── ── App Info section ──────────────────────  (center-aligned)
 │   ├── App name: "ScreenWatermark Pro"
-│   ├── Version: "v4.0.0"
+│   ├── Version: "v4.1.0a"
 │   └── Description: "Screenshot utility with watermark & timestamp overlay"
 ├── ── Development Team section ──────────────  (left-aligned rows)
 │   ├── PM / Design: [name]

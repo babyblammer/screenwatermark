@@ -1,0 +1,152 @@
+Issue 001
+BUG: Current version is not match with versioning rules.
+DESC: We're entering UPD40, according to versioning rule, we should in v4.0.0, the letter should mark with how many build has released. See /docs/VERSIONING_RULES.md for more details
+STEPS: 
+EXPECTED: We should enter v4.0.0
+ACTUAL: app still show v3.9.1e
+ENV: Windows 10
+LOGS: -
+SEVERITY: CRITICAL
+Notes : 
+
+Issue 002
+BUG: Button mode not updated after click.
+DESC: Button mode is not updated when user change Normal/Full/pattern. It stays in default state even user click other button.
+STEPS: Open app, Change mode of watermark can displayed, notice that, button mode not updated.
+EXPECTED: button mode should update to what curen state of mode
+ACTUAL: button  mode not updated.
+ENV: Windows 10
+LOGS: -
+SEVERITY: CRITICAL
+Notes : also happen on :
+-position button on watermark and timestamp
+-timestamp Outside position mode
+
+Issue 003
+BUG: Version inconsistency
+DESC: We're entering UPD40, according to versioning rule, we should in v4.0.0, the letter should mark with how many build has released. See /docs/VERSIONING_RULES.md for more details
+STEPS: 
+EXPECTED: We should enter v4.0.0
+ACTUAL: app still show v3.9.1e
+ENV: Windows 10
+LOGS: -
+SEVERITY: CRITICAL
+
+Issue 004
+BUG: Accordion placement not according to document.
+DESC: Accordion should placed below Preview canvas history panel.
+STEPS: Open app, notice that accordion is above preview canvas and history panel.
+EXPECTED: Accordion should placed below Preview canvas and history panel, according to mockup doc.
+ACTUAL: Accordion below preview canvas and history panel
+ENV: Windows 10
+LOGS: -
+SEVERITY: CRITICAL
+Notes : Please see attachment UPD40_Issue004.png for more details
+
+Issue 005
+BUG: History button toggle higlight is missing when hoover
+DESC: History button toggle hightlight is missing when user hover that buton.
+STEPS: Open app, go to history panel, hover the button, notice that hightlight is missing.
+EXPECTED: Hightlight remain exist
+ACTUAL: Hightlight missing after hover.
+ENV: Windows 10
+LOGS: -
+SEVERITY: Minor
+Notes : 
+
+issue 006
+BUG: History not showing any thumbnail screenshot history.
+DESC: History tab not showing thumbnail of screenshot hostory
+STEPS: Open app, open screenshot history, History tab not showing thumbnail of screenshot hostory
+EXPECTED: Thumbnail show screenshot history
+ACTUAL: Thumbnailscreenshot history not showing
+ENV: Windows 10
+LOGS: -
+SEVERITY: CRITICAL
+Notes : Please see UPD40_Issue006.png
+
+ISSUE 007
+BUG: Inconsistency size of Printscreen and region button size
+DESC: Printscreen and region button is inconsistent, its size is appear truncated or small.
+STEPS: Open app, notice that the printscreen and region button size is inconsistent
+EXPECTED: Thumbnail show screenshot history
+ACTUAL: Inconsistency size of Printscreen and region button size
+ENV: Windows 10
+LOGS: -
+SEVERITY: CRITICAL
+Notes : Please see UPD40_Issue007.png
+
+ISSUE 008
+BUG: Missing center of the screen position in watermark configuration.
+DESC: When user try to configure watermark position, user notice that in normal mode, center of the screen position is missing.
+STEPS: Open app, set wm mode to normal, try to adjust position of watermark, notice that center of the screen position is missing.
+EXPECTED: center of the screen button position exist.
+ACTUAL: Center of the screen button positioin is missing
+ENV: Windows 10
+LOGS: -
+SEVERITY: MEDIUM
+Notes :
+
+ISSUE 009
+BUG: [Need confirmation] Does this app support HIGH DPI?
+DESC: 
+STEPS: 
+EXPECTED: 
+ACTUAL: 
+ENV: Windows 10
+LOGS: -
+SEVERITY: QUESTION
+
+ISSUE 010
+BUG: Some strings are not interpreted
+DESC: User found that some strings are not interpreted: show_panel (right clik system tray menu), run_in_background notification, clear_hitory_confirm 
+STEPS: Open app, observe entire app and notice that strings are not interpreted.
+EXPECTED: Strings should interpreted to curent localization.
+ACTUAL: String is not interpreted
+ENV: Windows 10
+LOGS: -
+SEVERITY: critical
+Notes :
+
+ISSUE 010
+BUG: Widget labels has low contrast to read
+DESC: User observe entire app and notice that every label widget is in low contrast, e.g Enable, Mode, Scale, File, Font, Riwayat, Clear_history, Fullscreen Screenshot, Region Screenshot, Credits
+STEPS: Open app, observe entire app and notice that Widget label has low contrast.
+EXPECTED: label should readable
+ACTUAL: label has low contrast and hard to read
+ENV: Windows 10
+LOGS: -
+SEVERITY: critical
+Notes : Increase font size, and lightness
+
+ISSUE 011
+BUG: Watermark and timestamp accordion need better margin
+DESC: WM and TS accordion looks like going too edge of the window, and has no margin.
+STEPS: Open app, notice that WM and TS accordion going to edge of the window
+EXPECTED: WM and TS should has consisten margin
+ACTUAL: WM and TS has no consisten margin
+ENV: Windows 10
+LOGS: -
+SEVERITY: MAJOR
+
+ISSUE 011
+BUG: Inconsistency margin inside main window
+DESC: User observe the app, and notice that WM, TS and Preview canvas has inconsistency  margin
+STEPS: Open app, notice that WM, preview canvas and TS accordion going to edge of the window
+EXPECTED: Consisten
+ACTUAL: WM, preview canvas and TS has no consisten margin
+ENV: Windows 10
+LOGS: -
+SEVERITY: MAJOR
+
+ISSUE 011
+BUG: Inconsistency font size entire app
+DESC: User open the app, observe the UI, and noticed that font size is inconsistent
+STEPS: OPen app, observe UI
+EXPECTED: Consisten
+ACTUAL: font size is inconsistent
+ENV: Windows 10
+LOGS: -
+SEVERITY: MAJOR
+Notes : Use golden ratio size for font hierarchy.
+

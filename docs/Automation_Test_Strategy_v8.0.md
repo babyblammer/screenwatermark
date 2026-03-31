@@ -361,8 +361,7 @@ def test_apply_watermark_disabled():
     assert result.tobytes() == img.tobytes()
 
 def test_apply_timestamp_outside_extends_height(tmp_path):
-    cfg = {**DEFAULT_SETTINGS, "ts_enabled": True,
-           "ts_outside_canvas": True, "ts_position": "bottom-right"}
+    cfg = {**DEFAULT_SETTINGS, "ts_enabled": True}
     img = Image.new("RGB", (800, 600), (100, 100, 100))
     result = apply_timestamp(img, cfg)
     assert result.height > img.height

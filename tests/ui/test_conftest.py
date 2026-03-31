@@ -32,7 +32,7 @@ pyautogui.PAUSE = 0.05
 # ── Constants ─────────────────────────────────────────────────────────────────
 # Import from modular core/ after M1
 try:
-    from core.constants import SETTINGS_FILE, HISTORY_FILE
+    from core.constants import SETTINGS_FILE, HISTORY_FILE, CARD
 except ImportError:
     # Fallback if running pre-M1 (monolith still in place)
     SETTINGS_FILE = Path.home() / ".screenwatermark_settings.json"

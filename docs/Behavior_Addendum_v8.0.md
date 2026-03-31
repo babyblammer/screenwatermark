@@ -167,21 +167,19 @@ for v in [self.wm_enabled, self.wm_mode, self.watermark_path,
 def _ts_summary(self) -> str:
     if not self.ts_enabled.get():
         return t("off")
-    pos_map = {"bottom-right":"↘","bottom-left":"↙",
-               "top-right":"↗","top-left":"↖"}
-    pos  = pos_map.get(self.ts_position.get(), "↘")
+    mode = self.ts_enable.get()
     size = f"{self.ts_font_size.get()}px"
     col  = self.ts_color.get().upper()
-    return f"✓ {pos} · {size} · {col}"
+    return f"✓ {mode} · {size} · {col}"
 
 def _update_ts_summary(self):
-    if hasattr(self, "_ts_summary_lbl"):
-        self._ts_summary_lbl.configure(text=self._ts_summary())
+    if hasattr(self, "ts_summary"):
+        self.ts_summary.configure(text=self._ts_summary())
 ```
 
 Traces:
 ```python
-for v in [self.ts_enabled, self.ts_position, self.ts_font_size, self.ts_color]:
+for v in [self.ts_enable, self.ts_font_size, self.ts_color]:
     v.trace_add("write", lambda *_: self._update_ts_summary())
 ```
 

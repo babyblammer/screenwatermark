@@ -57,6 +57,13 @@ _STRINGS = {
         "press_escape_cancel": "Press Esc to cancel",
         "countdown_text": "Screenshot in...",
         "cancel_esc": "Press Esc to cancel",
+        "show_panel": "Show Window",
+        "run_in_background": "Running in background. Right-click tray icon to quit.",
+        "clear_history_confirm": "Clear all screenshot history?",
+        "history_tab_hint": "Click thumbnail to copy to clipboard",
+        "history_empty": "No screenshots yet.",
+        "preview_hint": "Preview will appear after first screenshot",
+        "select_file": "Select watermark file...",
     },
     "id": {
         "app_title": "ScreenWatermark Pro",
@@ -111,6 +118,13 @@ _STRINGS = {
         "press_escape_cancel": "Tekan Esc untuk batal",
         "countdown_text": "Screenshot dalam...",
         "cancel_esc": "Tekan Esc untuk batal",
+        "show_panel": "Tampilkan Jendela",
+        "run_in_background": "Berjalan di latar belakang. Klik kanan ikon tray untuk keluar.",
+        "clear_history_confirm": "Hapus semua riwayat screenshot?",
+        "history_tab_hint": "Klik thumbnail untuk menyalin ke clipboard",
+        "history_empty": "Belum ada screenshot.",
+        "preview_hint": "Pratinjau akan muncul setelah screenshot pertama",
+        "select_file": "Pilih file watermark...",
     }
 }
 

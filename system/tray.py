@@ -15,11 +15,11 @@ def _win_toast(title: str, message: str, on_click_show: bool = False) -> bool:
 
 # ── Tray icon ─────────────────────────────────────────────────────────────────
 def _make_tray_icon() -> "Image.Image":
-    img = Image.new("RGBA", (64, 64), (0,0,0,0))
+    img = Image.new("RGBA", (32, 32), (0,0,0,0))
     d   = ImageDraw.Draw(img)
-    d.rounded_rectangle([2,2,62,62], radius=12, fill="#6c63ff")
-    d.rectangle([12,20,52,44], outline="white", width=3)
-    d.ellipse([26,26,38,38], fill="white")
-    d.polygon([(44,36),(52,44),(52,36)], fill="#43e97b")
+    d.rounded_rectangle([1,1,30,30], radius=4, fill="#6c63ff")
+    d.rectangle([6,10,26,22], outline="white", width=2)
+    d.ellipse([13,13,19,19], fill="white")
+    d.polygon([(22,18),(26,22),(26,18)], fill="#43e97b")
     return img
 

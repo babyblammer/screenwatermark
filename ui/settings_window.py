@@ -39,13 +39,6 @@ class SettingsWindow(ctk.CTkToplevel):
     def _on_close(self):
         self.withdraw()
 
-    def _build_removed_notice(self, parent):
-        notice = ctk.CTkFrame(parent, fg_color="#180d0d", corner_radius=7)
-        notice.pack(fill="x", pady=(0, 8))
-        ctk.CTkLabel(notice, text="\u2718  Watermark config  →  main window accordion\n\u2718  Timestamp config  →  main window accordion",
-                     font=(FONT_MONO, 9), text_color="#7a3a3a", anchor="w", justify="left"
-                     ).pack(padx=12, pady=8)
-
     def _build_ui(self):
         header = ctk.CTkFrame(self, fg_color=PANEL, height=42, corner_radius=0)
         header.pack(fill="x")
@@ -56,15 +49,14 @@ class SettingsWindow(ctk.CTkToplevel):
         header_title.pack(side="left", padx=14, pady=10)
 
         self.version_lbl = ctk.CTkLabel(header, text=f"v{self.app.VERSION}",
-                                         font=(FONT_MONO, 9), text_color=MUTED)
+                                         font=(FONT_MONO, 10.5, "italic"), text_color=MUTED)
         self.version_lbl.pack(side="right", padx=12, pady=10)
 
         scroll = ctk.CTkScrollableFrame(self, fg_color=BG,
                                          scrollbar_button_color=ACCENT,
-                                         scrollbar_button_hover_color=ACCENT2)
+                                         scrollbar_button_hover_color="#7d75ff")
         scroll.pack(fill="both", expand=True, padx=10, pady=(8, 0))
         
-        self._build_removed_notice(scroll)
         self._card(scroll, t("startup"), self._build_startup_card)
         self._card(scroll, t("capture"), self._build_capture_card)
         self._card(scroll, t("hotkeys"), self._build_hotkey_card)
@@ -74,13 +66,13 @@ class SettingsWindow(ctk.CTkToplevel):
         footer.pack(fill="x", side="bottom")
         footer.pack_propagate(False)
 
-        ctk.CTkButton(footer, text=t("credits"), font=(FONT, 10),
+        ctk.CTkButton(footer, text=t("credits"), font=(FONT, 13),
                       fg_color=CARD, text_color=MUTED,
                       hover_color=BORDER, width=80, border_width=1, border_color=BORDER,
                       command=self._open_credits
                       ).pack(side="left", padx=12)
         
-        ctk.CTkButton(footer, text=t("reset_default"), font=(FONT, 10),
+        ctk.CTkButton(footer, text=t("reset_default"), font=(FONT, 13),
                       fg_color="transparent", text_color=MUTED,
                       hover_color=PANEL, width=120,
                       command=self._on_reset_default
@@ -89,7 +81,7 @@ class SettingsWindow(ctk.CTkToplevel):
         spacer = ctk.CTkFrame(footer, fg_color=PANEL, width=100)
         spacer.pack(side="left", expand=True)
 
-        ctk.CTkButton(footer, text=t("close"), font=(FONT, 10, "bold"),
+        ctk.CTkButton(footer, text=t("close"), font=(FONT, 13, "bold"),
                       fg_color=ACCENT, text_color="white", width=80,
                       command=self._on_close
                       ).pack(side="right", padx=12)
@@ -98,7 +90,7 @@ class SettingsWindow(ctk.CTkToplevel):
         card = ctk.CTkFrame(parent, fg_color=CARD, corner_radius=10)
         card.pack(fill="x", pady=(0, 8))
         
-        title_lbl = ctk.CTkLabel(card, text=title, font=(FONT, 11, "bold"),
+        title_lbl = ctk.CTkLabel(card, text=title, font=(FONT, 13.5, "bold"),
                                   text_color=ACCENT)
         title_lbl.pack(anchor="w", padx=12, pady=(10, 4))
         
@@ -114,20 +106,22 @@ class SettingsWindow(ctk.CTkToplevel):
         row = ctk.CTkFrame(parent, fg_color=CARD)
         row.pack(fill="x", pady=3)
         
-        ctk.CTkLabel(row, text=label, font=(FONT, 10), text_color=TEXT,
+        ctk.CTkLabel(row, text=label, font=(FONT, 13), text_color=TEXT,
                      width=100, anchor="w").pack(side="left")
         
-        val_lbl = ctk.CTkLabel(row, text=f"{var.get()} {unit}", font=(FONT, 10, "bold"),
+        val_lbl = ctk.CTkLabel(row, text=f"{var.get()} {unit}", font=(FONT, 11, "bold"),
                                 text_color=ACCENT, width=60, anchor="e")
         val_lbl.pack(side="right")
         
         def update_val(v):
             val_lbl.configure(text=f"{int(float(v))} {unit}")
         
+        if var == self.app.delay_sec:
+            self.delay_val_lbl = val_lbl
+        
         slider = ctk.CTkSlider(row, from_=from_, to=to, variable=var,
-                               progress_color=ACCENT, button_color=ACCENT2,
-                               button_hover_color=ACCENT,
-                               command=update_val)
+                       fg_color=BORDER, progress_color=ACCENT,
+                       command=update_val)
         slider.pack(side="left", fill="x", expand=True, padx=(6, 0))
 
     def _on_reset_default(self):
@@ -172,7 +166,7 @@ class SettingsWindow(ctk.CTkToplevel):
                                   onvalue=True, offvalue=False)
         min_cb.pack(anchor="w", pady=(0, 6))
 
-        self.startup_status_lbl = ctk.CTkLabel(p, text="", font=(FONT, 8),
+        self.startup_status_lbl = ctk.CTkLabel(p, text="", font=(FONT, 10.5, "italic"),
                                                  text_color=MUTED, anchor="w")
         self.startup_status_lbl.pack(anchor="w")
         self._refresh_startup_status()
@@ -192,54 +186,7 @@ class SettingsWindow(ctk.CTkToplevel):
     def _build_capture_card(self, p):
         app = self.app
 
-        mode_row = ctk.CTkFrame(p, fg_color=CARD)
-        mode_row.pack(fill="x", pady=(0, 6))
-        
-        ctk.CTkLabel(mode_row, text=t("default_mode") + ":", font=(FONT, 10),
-                     text_color=TEXT, anchor="w").pack(side="left")
-        
-        def on_mode_change(val):
-            app.capture_mode.set(val)
-        
-        mode_opt = ctk.CTkOptionMenu(mode_row, values=["Fullscreen", "Region"],
-                                      command=on_mode_change, width=100,
-                                      fg_color=BORDER, button_color=ACCENT,
-                                      button_hover_color=ACCENT2)
-        mode_opt.set("Fullscreen" if app.capture_mode.get() == "fullscreen" else "Region")
-        mode_opt.pack(side="left", padx=(8, 0))
-
-        region_row = ctk.CTkFrame(p, fg_color=CARD)
-        region_row.pack(fill="x", pady=(0, 4))
-        
-        self.region_label = ctk.CTkLabel(region_row, text=app._region_text(),
-                                          font=(FONT, 9), text_color=TEXT, anchor="w")
-        self.region_label.pack(side="left")
-        
-        ctk.CTkButton(region_row, text="\u21bb Reset", font=(FONT, 8),
-                       fg_color=BORDER, text_color=TEXT, hover_color=ACCENT2,
-                       width=60, height=24, command=app._reset_region
-                       ).pack(side="right")
-
         self._slider_row(p, t("delay") + ":", app.delay_sec, 0, 10, "s")
-
-        fmt_row = ctk.CTkFrame(p, fg_color=CARD)
-        fmt_row.pack(fill="x", pady=(4, 2))
-        
-        ctk.CTkLabel(fmt_row, text="TS Format:", font=(FONT, 10),
-                     text_color=TEXT, anchor="w").pack(side="left")
-        
-        fmt_entry = ctk.CTkEntry(fmt_row, textvariable=app.ts_format,
-                                  width=140, fg_color=BORDER,
-                                  border_color=BORDER, font=(FONT, 9))
-        fmt_entry.pack(side="left", padx=(8, 4))
-        
-        for lbl, fmt in [("DD/MM", "%d/%m/%Y %H:%M:%S"), ("ISO", "%Y-%m-%d %H:%M")]:
-            def set_fmt(f=fmt):
-                app.ts_format.set(f)
-            ctk.CTkButton(fmt_row, text=lbl, font=(FONT, 8),
-                           fg_color=BORDER, text_color=TEXT, hover_color=ACCENT,
-                           width=50, height=24, command=set_fmt
-                           ).pack(side="left")
 
     # ── Hotkey card ──────────────────────────────────────────────────────────
     def _build_hotkey_card(self, p):
@@ -249,7 +196,7 @@ class SettingsWindow(ctk.CTkToplevel):
         info_box.pack(fill="x", pady=(0, 8))
         
         ctk.CTkLabel(info_box, text="\u2328  Active Hotkeys",
-                     font=(FONT, 10, "bold"), text_color=ACCENT
+                     font=(FONT, 13.5, "bold"), text_color=ACCENT
                      ).pack(anchor="w", padx=10, pady=6)
 
         hotkeys = [
@@ -262,17 +209,17 @@ class SettingsWindow(ctk.CTkToplevel):
             row = ctk.CTkFrame(p, fg_color=CARD)
             row.pack(fill="x", pady=2)
             
-            ctk.CTkLabel(row, text=f"{label} :", font=(FONT, 9),
+            ctk.CTkLabel(row, text=f"{label} :", font=(FONT, 13),
                          text_color=MUTED, width=140, anchor="w"
                          ).pack(side="left")
             
             disp = _preset_label(var.get())
-            ctk.CTkLabel(row, text=disp, font=(FONT_MONO, 10, "bold"),
+            ctk.CTkLabel(row, text=disp, font=(FONT_MONO, 13, "bold"),
                          text_color=ACCENT
                          ).pack(side="left", padx=6)
 
         ctk.CTkLabel(p, text="App continues running in System Tray when window is closed.",
-                     font=(FONT, 8), text_color=MUTED, anchor="w"
+                     font=(FONT, 10.5, "italic"), text_color=MUTED, anchor="w"
                      ).pack(anchor="w", pady=(10, 0))
 
     # ── Language card ─────────────────────────────────────────────────────────
@@ -291,19 +238,20 @@ class SettingsWindow(ctk.CTkToplevel):
         row = ctk.CTkFrame(p, fg_color=CARD)
         row.pack(fill="x", pady=(0, 4))
         
-        ctk.CTkLabel(row, text=t("language") + ":", font=(FONT, 10),
+        ctk.CTkLabel(row, text=t("language") + ":", font=(FONT, 13),
                      text_color=TEXT, anchor="w").pack(side="left")
         
         lang = "English" if get_language() == "en" else "Indonesian"
         lang_opt = ctk.CTkOptionMenu(row, values=["English", "Indonesian"],
                                       command=on_language_change, width=120,
-                                      fg_color=BORDER, button_color=ACCENT,
-                                      button_hover_color=ACCENT2)
+                                      fg_color=BORDER, button_color=BORDER,
+                                      button_hover_color=ACCENT,
+                                      dropdown_fg_color=PANEL, text_color=TEXT)
         lang_opt.set(lang)
         lang_opt.pack(side="left", padx=(8, 0))
         
         ctk.CTkLabel(p, text="\u2139 " + t("restart_required"),
-                     font=(FONT, 8), text_color=MUTED, anchor="w"
+                     font=(FONT, 10.5, "italic"), text_color=MUTED, anchor="w"
                      ).pack(anchor="w")
 
     def _open_credits(self):
@@ -339,15 +287,15 @@ class CreditsPopup(ctk.CTkToplevel):
         app_info.pack(fill="x", pady=(0, 8))
 
         ctk.CTkLabel(app_info, text="ScreenWatermark Pro",
-                     font=(FONT, 14, "bold"), text_color=TEXT
+                     font=(FONT, 13.5, "bold"), text_color=TEXT
                      ).pack()
 
         ctk.CTkLabel(app_info, text=f"v{self.app.VERSION}",
-                     font=(FONT_MONO, 9), text_color=MUTED
+                      font=(FONT_MONO, 10.5, "italic"), text_color=MUTED
                      ).pack()
 
         ctk.CTkLabel(app_info, text="Screenshot utility with watermark & timestamp overlay",
-                     font=(FONT, 9), text_color=MUTED
+                     font=(FONT, 10.5, "italic"), text_color=MUTED
                      ).pack(pady=(2, 0))
 
         self._sep(container)
@@ -356,19 +304,19 @@ class CreditsPopup(ctk.CTkToplevel):
         license_info.pack(fill="x", pady=(0, 8))
 
         ctk.CTkLabel(license_info, text="© 2026 Pika25 Production",
-                     font=(FONT_MONO, 9), text_color=MUTED
+                      font=(FONT_MONO, 10.5, "italic"), text_color=MUTED
                      ).pack()
         ctk.CTkLabel(license_info, text="All rights reserved.",
-                     font=(FONT, 9), text_color=MUTED
+                     font=(FONT, 10.5, "italic"), text_color=MUTED
                      ).pack()
         ctk.CTkLabel(license_info, text="MIT License — Donationware",
-                     font=(FONT, 9, "bold"), text_color=ACCENT
+                     font=(FONT, 13.5, "bold"), text_color=ACCENT
                      ).pack(pady=(4, 0))
 
         self._sep(container)
 
         team_section = ctk.CTkLabel(container, text="Development Team",
-                                    font=(FONT, 10, "bold"), text_color=ACCENT,
+                                    font=(FONT, 13.5, "bold"), text_color=ACCENT,
                                     anchor="w")
         team_section.pack(fill="x", pady=(0, 8))
 
@@ -389,27 +337,27 @@ class CreditsPopup(ctk.CTkToplevel):
         for role, name in team_rows:
             row = ctk.CTkFrame(team_frame, fg_color="transparent")
             row.pack(fill="x", pady=1)
-            ctk.CTkLabel(row, text=f"{role}:", font=(FONT, 9), text_color=MUTED,
+            ctk.CTkLabel(row, text=f"{role}:", font=(FONT, 13), text_color=MUTED,
                          width=140, anchor="w").pack(side="left")
-            ctk.CTkLabel(row, text=name, font=(FONT, 9), text_color=TEXT,
+            ctk.CTkLabel(row, text=name, font=(FONT, 13), text_color=TEXT,
                          anchor="w").pack(side="left")
 
         self._sep(container)
 
         deps_section = ctk.CTkLabel(container, text="Dependencies",
-                                    font=(FONT, 10, "bold"), text_color=ACCENT,
+                                    font=(FONT, 13.5, "bold"), text_color=ACCENT,
                                     anchor="w")
         deps_section.pack(fill="x", pady=(0, 8))
 
         deps_text = "pillow ✓   mss ✓   pystray ✓   pynput ✓   pywin32 ✓"
         ctk.CTkLabel(container, text=deps_text,
-                     font=(FONT_MONO, 9), text_color=SUCCESS,
+                      font=(FONT_MONO, 10.5, "italic"), text_color=SUCCESS,
                      anchor="w"
                      ).pack(fill="x")
 
         self._sep(container)
 
-        ctk.CTkButton(container, text="Close", font=(FONT, 10, "bold"),
+        ctk.CTkButton(container, text="Close", font=(FONT, 13, "bold"),
                       fg_color=ACCENT, text_color="white", width=120,
                       command=self.destroy
                       ).pack(pady=(8, 0))

@@ -133,27 +133,14 @@ class TestApplyTimestamp:
     def base_img(self):
         return Image.new("RGB", (800, 600), (100, 100, 100))
 
-    def test_overlay_modifies_image(self, base_img):
-        """TC-M1-008: apply_timestamp overlays TS on image (overlay mode)."""
-        from core.settings import DEFAULT_SETTINGS
-        from core.render import apply_timestamp
-        cfg = {**DEFAULT_SETTINGS, "ts_enabled": True,
-               "ts_outside_canvas": False, "ts_position": "bottom-right"}
-        result = apply_timestamp(base_img.copy(), cfg)
-        assert result.tobytes() != base_img.convert("RGB").tobytes(), \
-            "apply_timestamp should modify the image"
-        assert result.height == base_img.height, \
-            "Overlay mode should not change image height"
-
     def test_outside_extends_height(self, base_img):
-        """TC-M1-009: apply_timestamp extends height in outside-canvas mode."""
+        """TC-M1-009: apply_timestamp extends height when enabled."""
         from core.settings import DEFAULT_SETTINGS
         from core.render import apply_timestamp
-        cfg = {**DEFAULT_SETTINGS, "ts_enabled": True,
-               "ts_outside_canvas": True, "ts_position": "bottom-right"}
+        cfg = {**DEFAULT_SETTINGS, "ts_enabled": True}
         result = apply_timestamp(base_img.copy(), cfg)
         assert result.height > base_img.height, \
-            f"Outside mode: result.height={result.height} should be > {base_img.height}"
+            f"TS enabled: result.height={result.height} should be > {base_img.height}"
 
     def test_disabled_returns_original(self, base_img):
         """apply_timestamp disabled returns original unchanged."""

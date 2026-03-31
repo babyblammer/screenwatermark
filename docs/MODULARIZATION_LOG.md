@@ -256,6 +256,73 @@ App is modularized and migrated to customtkinter with i18n support.
    - `ui/main_window_new.py` - deleted
    - `ui/main_window_tkinter.py` - deleted
 
+### Phase SYNC-2: CodeReview Fixes ✅
+**Date:** 2026-03-26
+
+#### Critical Fixes (B1-B5):
+
+1. **B1: ctk.*Var → tk.*Var** (`ui/main_window.py`)
+   - Changed all `ctk.StringVar`, `ctk.BooleanVar`, `ctk.IntVar` to `tk.*Var`
+   - Required for `.trace_add()` compatibility
+
+2. **B2: Pack preview_wrap on launch** (`ui/main_window.py`)
+   - Added `self.preview_wrap.pack(...)` after `_build_timestamp_controls()`
+   - Preview canvas now visible on app launch
+
+3. **B3: Remove tabview references** (`ui/main_window.py`)
+   - Fixed `_go_history_tab()` → `_switch_panel("history")`
+   - Fixed `_history_smart_open()` → proper panel switching or popup
+
+4. **B5: Delete _set_accordions_enabled()** (`ui/main_window.py`)
+   - Removed `_set_accordions_enabled()` method entirely
+   - Accordions remain enabled when History panel active (per spec)
+   - Updated `_switch_panel()` to remove calls to deleted method
+
+5. **B4: Replace btn_shot hack** (`ui/main_window.py`)
+   - Deleted `self.btn_shot = self.shot_btn._btn_fullscreen`
+   - Replaced all `self.btn_shot.configure(state=...)` → `self.shot_btn.set_enabled(True/False)`
+   - Replaced `self.btn_shot.configure(text=...)` → `self.shot_btn.set_mode(mode)`
+
+#### High Priority Fixes (B6-B9):
+
+6. **B6: Fix entry["timestamp"]** (`ui/main_window.py`)
+   - Changed `entry.get("time", "")[:16]` → `entry["timestamp"].strftime("%H:%M  %d/%m")`
+   - History metadata now renders correctly
+
+7. **B7: Remove canvas padding** (`ui/main_window.py`)
+   - Removed intermediate `preview_inner` frame
+   - Canvas packs directly without padding: `self.preview_canvas.pack()`
+
+8. **B8: Add _panel_mode initialization** (`ui/main_window.py`)
+   - Added `self._panel_mode: str = "preview"` to state section
+
+9. **B9: Add accordion state flags** (`ui/main_window.py`)
+   - Added `self._wm_acc_open: bool = True`
+   - Added `self._ts_acc_open: bool = False`
+
+#### Medium Priority Fixes (B10-B12):
+
+10. **B10: Add wm_indicator traces** (`ui/main_window.py`)
+    - Added `self.wm_enabled.trace_add("write", ...)` → `_update_wm_indicator()`
+    - Added `self.watermark_path.trace_add("write", ...)` → `_update_wm_indicator()`
+    - Badge now updates dynamically
+
+11. **B11: Add ui_language var** (`ui/main_window.py`)
+    - Added `self.ui_language = tk.StringVar(value=cfg.get("language", "en"))`
+
+12. **B12: History item packing** (`ui/main_window.py`)
+    - Already uses `item.pack(side="left")` for horizontal scroll
+
+#### Warnings Fixed (W1-W3):
+
+13. **W1: Remove padx from middle_frame.pack** (`ui/main_window.py`)
+    - Changed `self.middle_frame.pack(fill="x", padx=10, ...)` → `self.middle_frame.pack(fill="x", ...)`
+
+14. **W3: Remove colon from badge text** (`ui/main_window.py`)
+    - Changed `"WM: ✓"` → `"WM ✓"`
+    - Changed `"WM: ⚠"` → `"WM ⚠"`
+    - Changed `"WM: OFF"` → `"WM OFF"`
+
 **To run the app:**
 ```bash
 cd D:/Master/Vibecoding 2/screenwatermark
