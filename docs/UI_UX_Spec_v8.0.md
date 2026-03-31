@@ -49,7 +49,7 @@ FONT_MONO = "Consolas"
 
 ### Goals
 - Modern dark UI using CTk widgets natively
-- WM and TS config inline in main window (accordion components)
+- WM and TS config inline in main window (card layout with dropdowns)
 - Preview canvas ↔ History toggle replaces Notebook tabs
 - Split Fullscreen + Region shot buttons
 - Settings window stripped of WM + TS cards
@@ -70,7 +70,7 @@ FONT_MONO = "Consolas"
 | Python | 3.10+ |
 | OS chrome tinting | `pywinstyles` (Windows) — titlebar `#0a0e1a` |
 | Module location | `ui/main_window.py`, `ui/settings_window.py`, etc. |
-| Widget components | `ui/widgets/accordion.py`, `panel_toggle.py`, `shot_buttons.py`, `config_rows.py` |
+| Widget components | `ui/widgets/panel_toggle.py`, `shot_buttons.py`, `config_rows.py` |
 
 CTk init at top of `main.py`:
 ```python

@@ -2,7 +2,7 @@
 
 All rights reserved.
 
-License utama:
+Primary License:
 MIT License — Donationware
 Free to use, modify, and distribute.
 Voluntary donations are appreciated.
