@@ -187,8 +187,63 @@ Added to `i18n.py`:
 **Fix:**
 - Added High DPI support via `tk.call('tk', 'scaling', 1.0)`
 - Explicitly sets scaling factor for consistent rendering
+- Fixed CTkLabel image warning by using `CTkImage` instead of `ImageTk.PhotoImage`
 
 **Files Modified:** `ui/main_window.py`
+
+---
+
+## Issue 012 - CTkImage Warning (MINOR)
+**Status:** FIXED ✅
+
+**Problem:** Console warning about `PIL.ImageTk.PhotoImage` not being `CTkImage` - images won't scale on HighDPI displays.
+
+**Fix:**
+- Imported `CTkImage` from customtkinter
+- Changed both `_render_history_panel()` and `_render_history()` to use `CTkImage`:
+```python
+from customtkinter import CTkImage
+# ...
+ctk_img = CTkImage(light_image=thumb_img, dark_image=thumb_img, size=(108, 60))
+img_label.configure(image=ctk_img, text="")
+```
+
+**Files Modified:** `ui/main_window.py`
+
+---
+
+## Issue 013 - Bluriness / Font Visibility (MAJOR)
+**Status:** FIXED ✅
+
+**Problem:** Fonts and icons appear blurry on High DPI displays.
+
+**Fix:**
+1. Added Windows DPI Awareness:
+```python
+import ctypes
+ctypes.windll.shcore.SetProcessDpiAwareness(2)
+```
+
+2. Disabled CTk automatic scaling:
+```python
+ctk.set_widget_scaling(1.0)
+```
+
+3. Increased font sizes across the entire app (+1 size for all text):
+   - Labels (Enable, Mode, etc.): 9 → 10
+   - Small text: 8 → 9
+   - Mono values: 9 → 10
+   - Button text: 10 → 11
+   - Position pills: 11 → 12
+   - Accordion title: 11 → 12
+
+**Files Modified:**
+- `ui/main_window.py` - ~40 font updates
+- `ui/settings_window.py` - ~15 font updates
+- `ui/widgets/shot_buttons.py` - 2 font updates
+- `ui/widgets/accordion.py` - 4 font updates
+- `ui/widgets/config_rows.py` - 3 font updates
+- `ui/history_popup.py` - 6 font updates
 
 ---
 
@@ -208,8 +263,10 @@ Added to `i18n.py`:
 | 011-3 | MAJOR | ✅ FIXED |
 | 005 | MINOR | ✅ VERIFIED |
 | 009 | QUESTION | ✅ IMPLEMENTED |
+| 012 | ADDITIONAL | ✅ FIXED |
+| 013 | MAJOR | ✅ FIXED |
 
-**Total:** 12 issues fixed/verified
+**Total:** 14 issues fixed/verified
 
 ---
 

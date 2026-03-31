@@ -21,22 +21,22 @@ class CTkAccordion(ctk.CTkFrame):
         self._hdr.bind("<Button-1>", lambda e: self.toggle())
 
         if icon:
-            ctk.CTkLabel(self._hdr, text=icon, fg_color="transparent",
-                         font=(FONT, 12)).pack(side="left", padx=(12, 6), pady=8)
+             ctk.CTkLabel(self._hdr, text=icon, fg_color="transparent",
+                         font=(FONT, 13)).pack(side="left", padx=(12, 6), pady=8)
         
         self._title_lbl = ctk.CTkLabel(
-            self._hdr, text=title, font=(FONT, 11, "bold"),
+            self._hdr, text=title, font=(FONT, 12, "bold"),
             text_color=TEXT, fg_color="transparent")
         self._title_lbl.pack(side="left")
         
         self._summary_lbl = ctk.CTkLabel(
-            self._hdr, text="", font=(FONT_MONO, 9),
+            self._hdr, text="", font=(FONT_MONO, 10),
             text_color=MUTED, fg_color="transparent")
         self._summary_lbl.pack(side="right", padx=(0, 8))
         
         self._chevron = ctk.CTkLabel(
             self._hdr, text="▲" if open_by_default else "▼",
-            font=(FONT, 9), text_color=MUTED, fg_color="transparent")
+            font=(FONT, 10), text_color=MUTED, fg_color="transparent")
         self._chevron.pack(side="right", padx=(0, 6))
 
         ctk.CTkFrame(self, fg_color=BORDER, height=1,

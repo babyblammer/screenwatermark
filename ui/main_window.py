@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 import customtkinter as ctk
+from customtkinter import CTkImage
 import tkinter as tk
 import mss
 import pystray
@@ -53,8 +54,15 @@ class ScreenWatermarkApp(ctk.CTk):
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self._hide_to_tray)
         
-        # High DPI support
-        self.tk.call('tk', 'scaling', 1.0)
+        # High DPI support - enable DPI awareness for Windows
+        try:
+            import ctypes
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        except Exception:
+            pass
+        
+        # Disable CTk automatic scaling to prevent bluriness
+        ctk.set_widget_scaling(1.0)
         
         # Apply CTk styling
         ctk.set_appearance_mode("dark")
@@ -178,7 +186,7 @@ class ScreenWatermarkApp(ctk.CTk):
         # App title
         title_label = ctk.CTkLabel(
             header, text="ScreenWatermark Pro",
-            font=(FONT, 12, "bold"), text_color=TEXT, fg_color="transparent")
+            font=(FONT, 13, "bold"), text_color=TEXT, fg_color="transparent")
         title_label.pack(side="left", padx=(0, 8), pady=10)
         
         # WM badge (pill style)
@@ -196,7 +204,7 @@ class ScreenWatermarkApp(ctk.CTk):
         
         # History button
         self.btn_history = ctk.CTkButton(
-            header, text="🕒", font=(FONT, 12),
+            header, text="🕒", font=(FONT, 13),
             fg_color="transparent", hover_color=CARD2, text_color=MUTED,
             corner_radius=6, border_width=1, border_color=BORDER,
             width=36, height=28,
@@ -205,9 +213,10 @@ class ScreenWatermarkApp(ctk.CTk):
         
         # Settings button
         self.btn_settings = ctk.CTkButton(
-            header, text=f"⚙ {t('settings')}", font=(FONT, 9, "bold"),
-            fg_color=ACCENT, hover_color="#7d75ff", text_color="white",
-            corner_radius=6, border_width=0, width=90, height=28,
+            header, text=f"⚙ {t('settings')}", font=(FONT, 13),
+            fg_color=CARD, text_color=MUTED,
+            hover_color=BORDER, corner_radius=6, border_width=1, border_color=BORDER,
+            width=90, height=28,
             command=self._open_settings)
         self.btn_settings.pack(side="right", padx=12, pady=8)
     # ── Mode & Helpers ───────────────────────────────────────────────────────
@@ -235,8 +244,8 @@ class ScreenWatermarkApp(ctk.CTk):
         
         self.btn_panel_preview = ctk.CTkButton(
             container, text=f"🖼  {t('preview')}",
-            fg_color=ACCENT, hover_color="#7d75ff", text_color="white",
-            corner_radius=7, height=28, width=100,
+            fg_color=ACCENT, hover_color="#5a52e0", text_color="white",
+            corner_radius=6, height=28, width=100,
             command=lambda: self._switch_panel("preview"))
         self.btn_panel_preview.pack(side="left", padx=3, pady=3)
         
@@ -245,14 +254,15 @@ class ScreenWatermarkApp(ctk.CTk):
         
         self.btn_panel_history = ctk.CTkButton(
             hist_container, text=f"🕒  {t('history')}",
-            fg_color="transparent", hover_color=CARD2, text_color=MUTED,
-            corner_radius=7, height=28, width=100,
+            fg_color=CARD, hover_color=BORDER, text_color=MUTED,
+            corner_radius=6, height=28, width=100,
+            border_width=1, border_color=BORDER,
             command=lambda: self._switch_panel("history"))
         self.btn_panel_history.pack(side="left")
         
         self.hist_badge = ctk.CTkLabel(
             hist_container, text="", fg_color=ACCENT2, text_color="white",
-            corner_radius=10, font=(FONT_MONO, 8), width=0, height=16, padx=5)
+            corner_radius=10, font=(FONT_MONO, 10), width=0, height=16, padx=5)
         self.hist_badge.pack(side="left", padx=(4, 0))
         self._update_history_badge()
 
@@ -265,7 +275,7 @@ class ScreenWatermarkApp(ctk.CTk):
             self.btn_panel_history.configure(fg_color="transparent", text_color=MUTED)
         else:
             self.preview_wrap.pack_forget()
-            self.history_panel_wrap.pack(fill="x", padx=12, pady=(0, 8))
+            self.history_panel_wrap.pack(fill="x", padx=12, pady=(0, 8), before=self.wm_accordion)
             self.btn_panel_history.configure(fg_color=ACCENT, text_color="white")
             self.btn_panel_preview.configure(fg_color="transparent", text_color=MUTED)
             self._render_history_panel()
@@ -299,11 +309,12 @@ class ScreenWatermarkApp(ctk.CTk):
         hist_topbar.pack(fill="x", padx=12, pady=(8, 4))
         
         ctk.CTkLabel(hist_topbar, text=t("history_tab_hint"),
-                     font=(FONT_MONO, 9), text_color=MUTED, fg_color="transparent").pack(side="left")
+                     font=(FONT_MONO, 10), text_color=MUTED, fg_color="transparent").pack(side="left")
         
-        ctk.CTkButton(hist_topbar, text=t("clear_history"), font=(FONT, 8),
-                      fg_color="transparent", hover_color=BORDER, text_color=MUTED,
-                      corner_radius=4, width=70, height=22,
+        ctk.CTkButton(hist_topbar, text=t("clear_history"), font=(FONT, 13),
+                      fg_color=CARD, hover_color=BORDER, text_color=MUTED,
+                      corner_radius=6, border_width=1, border_color=BORDER,
+                      width=90, height=28,
                       command=self._clear_all_history).pack(side="right")
         
         self.history_scroll = ctk.CTkScrollableFrame(
@@ -324,7 +335,7 @@ class ScreenWatermarkApp(ctk.CTk):
         
         if not entries:
             ctk.CTkLabel(self.history_scroll, text=t("history_empty"),
-                        font=(FONT, 9), text_color=MUTED).pack(pady=40)
+                        font=(FONT, 13), text_color=MUTED).pack(pady=40)
             return
         
         for idx, entry in enumerate(reversed(entries)):
@@ -337,14 +348,14 @@ class ScreenWatermarkApp(ctk.CTk):
             try:
                 thumb_img = Image.open(io.BytesIO(entry["thumb_bytes"]))
                 thumb_img = thumb_img.resize((108, 60), Image.LANCZOS)
-                thumb_tk = ImageTk.PhotoImage(thumb_img)
-                img_label.configure(image=thumb_tk, text="")
-                img_label._image = thumb_tk
+                ctk_img = CTkImage(light_image=thumb_img, dark_image=thumb_img, size=(108, 60))
+                img_label.configure(image=ctk_img, text="")
+                img_label._image = ctk_img
             except Exception:
                 pass
             
             meta = ctk.CTkLabel(item, text=entry["timestamp"].strftime("%H:%M  %d/%m"),
-                               font=(FONT_MONO, 8), text_color=MUTED)
+                               font=(FONT_MONO, 10), text_color=MUTED)
             meta.pack(pady=2)
 
     def _build_bottom_bar(self):
@@ -357,14 +368,14 @@ class ScreenWatermarkApp(ctk.CTk):
         
         # Status on left
         self.status_var = ctk.StringVar(value=f"{t('status_ready')} - {self.hotkey_fullscreen.get()} | {self.hotkey_region.get()} | {self.hotkey_history.get()}")
-        ctk.CTkLabel(bottom_bar, textvariable=self.status_var, font=(FONT, 8),
+        ctk.CTkLabel(bottom_bar, textvariable=self.status_var, font=(FONT, 13),
                     text_color=MUTED, fg_color="transparent").pack(side="left", padx=14, pady=16)
         
         # Copy button
         self.btn_copy = ctk.CTkButton(
-            bottom_bar, text=t("copy"), font=(FONT, 9, "bold"),
+            bottom_bar, text=t("copy"), font=(FONT, 13),
             fg_color=ACCENT2, hover_color="#e05570", text_color="white",
-            corner_radius=6, border_width=0, width=70, height=30,
+            corner_radius=6, width=80, height=32,
             command=self._copy_to_clipboard, state="disabled")
         self.btn_copy.pack(side="right", padx=6, pady=10)
         
@@ -377,9 +388,9 @@ class ScreenWatermarkApp(ctk.CTk):
         
         # History button
         ctk.CTkButton(
-            bottom_bar, text="Riwayat", font=(FONT, 8),
-            fg_color="transparent", hover_color=BORDER, text_color=MUTED,
-            corner_radius=4, border_width=1, border_color=BORDER, width=60, height=26,
+            bottom_bar, text="Riwayat", font=(FONT, 13),
+            fg_color=CARD, hover_color=BORDER, text_color=MUTED,
+            corner_radius=6, border_width=1, border_color=BORDER, width=80, height=32,
             command=self._go_history_tab).pack(side="right", padx=4, pady=10)
         
         # Set initial mode
@@ -955,7 +966,7 @@ class ScreenWatermarkApp(ctk.CTk):
             self.btn_clear_history.configure(state="normal" if entries else "disabled")
 
         if not entries:
-            ctk.CTkLabel(self.history_scroll, text=t("history_empty"), font=(FONT, 9), text_color=MUTED).pack(pady=40)
+            ctk.CTkLabel(self.history_scroll, text=t("history_empty"), font=(FONT, 13), text_color=MUTED).pack(pady=40)
             return
 
         for idx, entry in enumerate(reversed(entries)):
@@ -963,28 +974,29 @@ class ScreenWatermarkApp(ctk.CTk):
             item.pack(fill="x", pady=(0, 6), padx=2)
             
             try:
-                tk_img = ImageTk.PhotoImage(Image.open(io.BytesIO(entry["thumb_bytes"])))
+                thumb_img = Image.open(io.BytesIO(entry["thumb_bytes"]))
+                ctk_img = CTkImage(light_image=thumb_img, dark_image=thumb_img, size=(180, 101))
             except:
-                tk_img = None
-            if tk_img:
-                self._history_tks.append(tk_img)
-                ctk.CTkLabel(item, image=tk_img, text="").pack(side="left", padx=(8, 10))
+                ctk_img = None
+            if ctk_img:
+                self._history_tks.append(ctk_img)
+                ctk.CTkLabel(item, image=ctk_img, text="").pack(side="left", padx=(8, 10))
 
             info = ctk.CTkFrame(item, fg_color="transparent")
             info.pack(side="left", fill="y", anchor="n", pady=6)
             
-            ctk.CTkLabel(info, text=f"#{len(entries)-idx}", font=(FONT, 11, "bold"), text_color=ACCENT).pack(anchor="w")
-            ctk.CTkLabel(info, text=f"{entry['width']} x {entry['height']} px", font=(FONT, 8), text_color=MUTED).pack(anchor="w")
-            ctk.CTkLabel(info, text=entry["timestamp"].strftime("%H:%M:%S  %d/%m/%Y"), font=(FONT, 9), text_color=TEXT).pack(anchor="w")
+            ctk.CTkLabel(info, text=f"#{len(entries)-idx}", font=(FONT, 13, "bold"), text_color=ACCENT).pack(anchor="w")
+            ctk.CTkLabel(info, text=f"{entry['width']} x {entry['height']} px", font=(FONT, 13), text_color=MUTED).pack(anchor="w")
+            ctk.CTkLabel(info, text=entry["timestamp"].strftime("%H:%M:%S  %d/%m/%Y"), font=(FONT, 13), text_color=TEXT).pack(anchor="w")
 
             btn_row = ctk.CTkFrame(info, fg_color="transparent")
             btn_row.pack(anchor="w", pady=(6, 0))
             
-            ctk.CTkButton(btn_row, text="Salin", font=(FONT, 8), fg_color=ACCENT, hover_color="#5a52e0",
-                          text_color="white", corner_radius=4, width=50, height=24,
+            ctk.CTkButton(btn_row, text="Salin", font=(FONT, 13), fg_color=ACCENT, hover_color="#5a52e0",
+                          text_color="white", corner_radius=6, width=60, height=28,
                           command=lambda e=entry: self._load_from_history(e)).pack(side="left")
-            ctk.CTkButton(btn_row, text="X", font=(FONT, 8), fg_color="transparent", hover_color=BORDER,
-                          text_color=MUTED, corner_radius=4, width=24, height=24,
+            ctk.CTkButton(btn_row, text="X", font=(FONT, 13), fg_color=CARD, hover_color=BORDER,
+                          text_color=MUTED, corner_radius=6, width=28, height=28, border_width=1, border_color=BORDER,
                           command=lambda e=entry: self._delete_history_entry(e)).pack(side="left", padx=(4, 0))
 
     def _delete_history_entry(self, entry: dict):
@@ -1050,21 +1062,21 @@ class ScreenWatermarkApp(ctk.CTk):
         row1 = ctk.CTkFrame(body, fg_color="transparent")
         row1.pack(fill="x", pady=(6, 4))
         
-        ctk.CTkLabel(row1, text="Enable", font=(FONT, 9), text_color=MUTED).pack(side="left")
+        ctk.CTkLabel(row1, text="Enable", font=(FONT, 13), text_color=MUTED).pack(side="left")
         pill_frame = ctk.CTkFrame(row1, fg_color=CARD2, corner_radius=6)
         pill_frame.pack(side="left", padx=6)
         self.wm_on_btn = ctk.CTkButton(pill_frame, text="ON", width=50, height=22,
                                         fg_color=ACCENT, text_color="white",
-                                        corner_radius=5, font=(FONT, 9),
+                                        corner_radius=5, font=(FONT, 13),
                                         command=lambda: self._set_wm_enabled(True))
         self.wm_on_btn.pack(side="left", padx=2, pady=2)
         self.wm_off_btn = ctk.CTkButton(pill_frame, text="OFF", width=50, height=22,
                                          fg_color="transparent", text_color=MUTED,
-                                         corner_radius=5, font=(FONT, 9),
+                                         corner_radius=5, font=(FONT, 13),
                                          command=lambda: self._set_wm_enabled(False))
         self.wm_off_btn.pack(side="left", padx=2, pady=2)
         
-        ctk.CTkLabel(row1, text="Mode", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
+        ctk.CTkLabel(row1, text="Mode", font=(FONT, 13), text_color=MUTED).pack(side="left", padx=(12, 0))
         mode_frame = ctk.CTkFrame(row1, fg_color=CARD2, corner_radius=6)
         mode_frame.pack(side="left", padx=6)
         self.wm_mode_btns = {}
@@ -1073,55 +1085,55 @@ class ScreenWatermarkApp(ctk.CTk):
             btn = ctk.CTkButton(mode_frame, text=lbl, width=60, height=22,
                           fg_color=ACCENT if is_active else "transparent",
                           text_color="white" if is_active else MUTED,
-                          corner_radius=5, font=(FONT, 9), border_width=0,
+                          corner_radius=5, font=(FONT, 13), border_width=0,
                           command=lambda v=val: self._on_wm_mode_change(v))
             btn.pack(side="left", padx=2, pady=2)
             self.wm_mode_btns[val] = btn
         
-        ctk.CTkLabel(row1, text="Opacity", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
+        ctk.CTkLabel(row1, text="Opacity", font=(FONT, 13), text_color=MUTED).pack(side="left", padx=(12, 0))
         self.wm_opacity_slider = ctk.CTkSlider(row1, from_=10, to=100, variable=self.wm_opacity,
                                                   width=70, height=14, fg_color=BORDER, progress_color=ACCENT,
                                                   command=lambda v: self.wm_opacity_lbl.configure(text=f"{int(float(v))}%"))
         self.wm_opacity_slider.pack(side="left", padx=4)
-        self.wm_opacity_lbl = ctk.CTkLabel(row1, text=f"{self.wm_opacity.get()}%", font=(FONT_MONO, 9), text_color=ACCENT)
+        self.wm_opacity_lbl = ctk.CTkLabel(row1, text=f"{self.wm_opacity.get()}%", font=(FONT_MONO, 10), text_color=ACCENT)
         self.wm_opacity_lbl.pack(side="left")
         
         self.wm_pos_row = ctk.CTkFrame(body, fg_color="transparent")
         self.wm_pos_row.pack(fill="x", pady=(0, 4))
-        ctk.CTkLabel(self.wm_pos_row, text="Pos", font=(FONT, 9), text_color=MUTED).pack(side="left")
+        ctk.CTkLabel(self.wm_pos_row, text="Pos", font=(FONT, 13), text_color=MUTED).pack(side="left")
         self.wm_pos_btns = {}
         for lbl, val in [("\u2199", "bottom-left"), ("\u2198", "bottom-right"), ("\u2196", "top-left"), ("\u2197", "top-right"), ("\u25CE", "center")]:
             is_active = self.wm_position.get() == val
             btn = ctk.CTkButton(self.wm_pos_row, text=lbl, width=36, height=24,
                           fg_color=ACCENT if is_active else CARD2,
                           text_color="white" if is_active else TEXT,
-                          corner_radius=4, font=(FONT, 11), border_width=0,
+                          corner_radius=4, font=(FONT, 13), border_width=0,
                           command=lambda v=val: (self.wm_position.set(v), self._refresh_wm_controls()))
             btn.pack(side="left", padx=2)
             self.wm_pos_btns[val] = btn
         
         self.wm_scale_row = ctk.CTkFrame(body, fg_color="transparent")
         self.wm_scale_row.pack(fill="x", pady=(0, 4))
-        ctk.CTkLabel(self.wm_scale_row, text="Scale", font=(FONT, 9), text_color=MUTED).pack(side="left")
+        ctk.CTkLabel(self.wm_scale_row, text="Scale", font=(FONT, 13), text_color=MUTED).pack(side="left")
         self.wm_scale_slider = ctk.CTkSlider(self.wm_scale_row, from_=5, to=60, variable=self.wm_scale,
                                               width=70, height=14, fg_color=BORDER, progress_color=ACCENT,
                                               command=lambda v: self.wm_scale_lbl.configure(text=f"{int(float(v))}%"))
         self.wm_scale_slider.pack(side="left", padx=4)
-        self.wm_scale_lbl = ctk.CTkLabel(self.wm_scale_row, text=f"{self.wm_scale.get()}%", font=(FONT_MONO, 9), text_color=ACCENT)
+        self.wm_scale_lbl = ctk.CTkLabel(self.wm_scale_row, text=f"{self.wm_scale.get()}%", font=(FONT_MONO, 10), text_color=ACCENT)
         self.wm_scale_lbl.pack(side="left")
         
         file_row = ctk.CTkFrame(body, fg_color="transparent")
         file_row.pack(fill="x", pady=(0, 6))
-        ctk.CTkLabel(file_row, text="File", font=(FONT, 9), text_color=MUTED).pack(side="left")
+        ctk.CTkLabel(file_row, text="File", font=(FONT, 13), text_color=MUTED).pack(side="left")
         self.wm_path_entry = ctk.CTkEntry(file_row, textvariable=self.watermark_path,
                                            placeholder_text=t("select_file"),
-                                           fg_color=BORDER, border_color=BORDER, font=(FONT, 9), height=26)
+                                           fg_color=BORDER, border_color=BORDER, font=(FONT, 13), height=26)
         self.wm_path_entry.pack(side="left", fill="x", expand=True, padx=(8, 4))
-        ctk.CTkButton(file_row, text="...", width=36, height=26, fg_color=BORDER,
-                      hover_color="#3a3a5e", text_color=TEXT, corner_radius=4,
+        ctk.CTkButton(file_row, text="...", width=32, height=28, fg_color=BORDER,
+                      hover_color="#3a3a5e", text_color=TEXT, corner_radius=6,
                       command=self._pick_watermark).pack(side="left")
         
-        self.wm_summary = ctk.CTkLabel(body, text="", font=(FONT_MONO, 9), text_color=MUTED, anchor="w")
+        self.wm_summary = ctk.CTkLabel(body, text="", font=(FONT_MONO, 10), text_color=MUTED, anchor="w")
         self.wm_summary.pack(fill="x", pady=(4, 0))
         
         self._set_wm_enabled(self.wm_enabled.get())
@@ -1220,21 +1232,21 @@ class ScreenWatermarkApp(ctk.CTk):
         row1 = ctk.CTkFrame(body, fg_color="transparent")
         row1.pack(fill="x", pady=(6, 4))
         
-        ctk.CTkLabel(row1, text="Enable", font=(FONT, 9), text_color=MUTED).pack(side="left")
+        ctk.CTkLabel(row1, text="Enable", font=(FONT, 13), text_color=MUTED).pack(side="left")
         pill_frame = ctk.CTkFrame(row1, fg_color=CARD2, corner_radius=6)
         pill_frame.pack(side="left", padx=6)
         self.ts_on_btn = ctk.CTkButton(pill_frame, text="ON", width=50, height=22,
                                         fg_color=ACCENT, text_color="white",
-                                        corner_radius=5, font=(FONT, 9),
+                                        corner_radius=5, font=(FONT, 13),
                                         command=lambda: self._set_ts_enabled(True))
         self.ts_on_btn.pack(side="left", padx=2, pady=2)
         self.ts_off_btn = ctk.CTkButton(pill_frame, text="OFF", width=50, height=22,
                                          fg_color="transparent", text_color=MUTED,
-                                         corner_radius=5, font=(FONT, 9),
+                                         corner_radius=5, font=(FONT, 13),
                                          command=lambda: self._set_ts_enabled(False))
         self.ts_off_btn.pack(side="left", padx=2, pady=2)
         
-        ctk.CTkLabel(row1, text="Outside", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
+        ctk.CTkLabel(row1, text="Outside", font=(FONT, 13), text_color=MUTED).pack(side="left", padx=(12, 0))
         outside_frame = ctk.CTkFrame(row1, fg_color=CARD2, corner_radius=6)
         outside_frame.pack(side="left", padx=6)
         self.ts_outside_btns = {}
@@ -1243,19 +1255,19 @@ class ScreenWatermarkApp(ctk.CTk):
             btn = ctk.CTkButton(outside_frame, text=lbl, width=50, height=22,
                           fg_color=ACCENT if is_active else "transparent",
                           text_color="white" if is_active else MUTED,
-                          corner_radius=5, font=(FONT, 9), border_width=0,
+                          corner_radius=5, font=(FONT, 13), border_width=0,
                           command=lambda v=val: self.ts_outside_canvas.set(v))
             btn.pack(side="left", padx=2, pady=2)
             self.ts_outside_btns[val] = btn
         
-        ctk.CTkLabel(row1, text="Pos", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
+        ctk.CTkLabel(row1, text="Pos", font=(FONT, 13), text_color=MUTED).pack(side="left", padx=(12, 0))
         self.ts_pos_btns = {}
         for lbl, val in [("\u2198", "bottom-right"), ("\u2199", "bottom-left"), ("\u2197", "top-right"), ("\u2196", "top-left")]:
             is_active = self.ts_position.get() == val
             btn = ctk.CTkButton(row1, text=lbl, width=36, height=22,
                           fg_color=ACCENT if is_active else CARD2,
                           text_color="white" if is_active else TEXT,
-                          corner_radius=4, font=(FONT, 11), border_width=0,
+                          corner_radius=4, font=(FONT, 13), border_width=0,
                           command=lambda v=val: self.ts_position.set(v))
             btn.pack(side="left", padx=2)
             self.ts_pos_btns[val] = btn
@@ -1263,36 +1275,36 @@ class ScreenWatermarkApp(ctk.CTk):
         row2 = ctk.CTkFrame(body, fg_color="transparent")
         row2.pack(fill="x", pady=(0, 4))
         
-        ctk.CTkLabel(row2, text="Font", font=(FONT, 9), text_color=MUTED).pack(side="left")
+        ctk.CTkLabel(row2, text="Font", font=(FONT, 13), text_color=MUTED).pack(side="left")
         self.ts_font_slider = ctk.CTkSlider(row2, from_=10, to=60, variable=self.ts_font_size,
                                               width=70, height=14, fg_color=BORDER, progress_color=ACCENT)
         self.ts_font_slider.pack(side="left", padx=4)
-        self.ts_font_lbl = ctk.CTkLabel(row2, text=f"{self.ts_font_size.get()}px", font=(FONT_MONO, 9), text_color=ACCENT)
+        self.ts_font_lbl = ctk.CTkLabel(row2, text=f"{self.ts_font_size.get()}px", font=(FONT_MONO, 10), text_color=ACCENT)
         self.ts_font_lbl.pack(side="left")
         
-        ctk.CTkLabel(row2, text="Color", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
+        ctk.CTkLabel(row2, text="Color", font=(FONT, 13), text_color=MUTED).pack(side="left", padx=(12, 0))
         self.ts_color_btn = ctk.CTkButton(row2, text="", width=24, height=24, corner_radius=4,
                                             fg_color=self.ts_color.get(), hover_color=self.ts_color.get(),
                                             command=self._pick_ts_color)
         self.ts_color_btn.pack(side="left", padx=4)
         
-        ctk.CTkLabel(row2, text="BG", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(8, 0))
+        ctk.CTkLabel(row2, text="BG", font=(FONT, 13), text_color=MUTED).pack(side="left", padx=(8, 0))
         self.ts_bg_btn = ctk.CTkButton(row2, text="", width=24, height=24, corner_radius=4,
                                          fg_color=self.ts_bg_color.get(), hover_color=self.ts_bg_color.get(),
                                          command=self._pick_ts_bg_color)
         self.ts_bg_btn.pack(side="left", padx=4)
         
-        ctk.CTkLabel(row2, text="Bold", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(12, 0))
+        ctk.CTkLabel(row2, text="Bold", font=(FONT, 13), text_color=MUTED).pack(side="left", padx=(12, 0))
         self.ts_bold_toggle = ctk.CTkCheckBox(row2, text="", variable=self.ts_bold, width=20, height=22,
                                                 fg_color=ACCENT, hover_color=ACCENT)
         self.ts_bold_toggle.pack(side="left")
         
-        ctk.CTkLabel(row2, text="Shadow", font=(FONT, 9), text_color=MUTED).pack(side="left", padx=(8, 0))
+        ctk.CTkLabel(row2, text="Shadow", font=(FONT, 13), text_color=MUTED).pack(side="left", padx=(8, 0))
         self.ts_shadow_toggle = ctk.CTkCheckBox(row2, text="", variable=self.ts_shadow, width=20, height=22,
                                                   fg_color=ACCENT, hover_color=ACCENT)
         self.ts_shadow_toggle.pack(side="left")
         
-        self.ts_summary = ctk.CTkLabel(body, text="", font=(FONT_MONO, 9), text_color=MUTED, anchor="w")
+        self.ts_summary = ctk.CTkLabel(body, text="", font=(FONT_MONO, 10), text_color=MUTED, anchor="w")
         self.ts_summary.pack(fill="x", pady=(4, 0))
         
         self._set_ts_enabled(self.ts_enabled.get())

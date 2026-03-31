@@ -66,10 +66,10 @@ class HistoryPopup(tk.Toplevel):
     def _build(self):
         hdr = tk.Frame(self, bg=PANEL); hdr.pack(fill="x", padx=10, pady=(10,6))
         tk.Label(hdr, text="\U0001f5bc  Riwayat Screenshot",
-                 font=("Segoe UI", 10, "bold"), bg=PANEL, fg=ACCENT
+                 font=("Segoe UI", 11, "bold"), bg=PANEL, fg=ACCENT
                  ).pack(side="left")
         tk.Button(hdr, text="\u2715", bg=PANEL, fg=MUTED, bd=0,
-                  font=("Segoe UI", 10), command=self._safe_destroy
+                  font=("Segoe UI", 11), command=self._safe_destroy
                   ).pack(side="right")
 
         # [m6-fix] Salin history di bawah lock agar iterasi aman
@@ -78,7 +78,7 @@ class HistoryPopup(tk.Toplevel):
 
         if not history:
             tk.Label(self, text="Belum ada screenshot.",
-                     bg=PANEL, fg=MUTED, font=("Segoe UI", 9)
+                     bg=PANEL, fg=MUTED, font=("Segoe UI", 10)
                      ).pack(pady=24, padx=24)
             return
 
@@ -104,16 +104,16 @@ class HistoryPopup(tk.Toplevel):
                 tk.Label(col, image=tk_img, bg=CARD).pack()
 
             tk.Label(col, text=entry["timestamp"].strftime("%H:%M:%S"),
-                     bg=CARD, fg=TEXT, font=("Segoe UI", 8)).pack()
+                     bg=CARD, fg=TEXT, font=("Segoe UI", 10)).pack()
             tk.Label(col, text=f"{entry['width']}\u00d7{entry['height']}",
-                     bg=CARD, fg=MUTED, font=("Segoe UI", 8)).pack()
+                     bg=CARD, fg=MUTED, font=("Segoe UI", 10)).pack()
 
             def _click(ev, en=entry, c=col): self._copy_entry(en, c)
             for child in list(col.winfo_children()) + [col]:
                 child.bind("<Button-1>", _click)
 
         tk.Label(self, text="Klik thumbnail untuk menyalin ke clipboard",
-                 bg=PANEL, fg=TEXT, font=("Segoe UI", 9)
+                 bg=PANEL, fg=TEXT, font=("Segoe UI", 10)
                  ).pack(pady=(2,8))
 
     def _render(self):

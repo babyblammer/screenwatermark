@@ -7,7 +7,7 @@ import customtkinter as ctk
 from core.constants import CARD, CARD2, BORDER, ACCENT, ACCENT2, TEXT, MUTED, FONT, FONT_MONO
 
 def label(parent, text: str, pack=True) -> ctk.CTkLabel:
-    lbl = ctk.CTkLabel(parent, text=text, font=(FONT, 9),
+    lbl = ctk.CTkLabel(parent, text=text, font=(FONT, 10),
                        text_color=MUTED, fg_color="transparent")
     if pack:
         lbl.pack(side="left", padx=(0, 3))
@@ -22,7 +22,7 @@ def slider_row(parent, lbl_text: str, var, from_: int, to: int,
                unit: str = "", width: int = 70) -> ctk.CTkLabel:
     label(parent, lbl_text)
     val_lbl = ctk.CTkLabel(parent, text=f"{var.get()} {unit}",
-                            font=(FONT_MONO, 9), text_color=ACCENT,
+                             font=(FONT_MONO, 10), text_color=ACCENT,
                             fg_color="transparent", width=36)
     ctk.CTkSlider(parent, from_=from_, to=to, variable=var, width=width, height=14,
                   command=lambda v, l=val_lbl, u=unit:
@@ -48,7 +48,7 @@ def pill_toggle(parent, values: list, default: str,
             fg_color=ACCENT if val == default else "transparent",
             hover_color=CARD2,
             text_color="white" if val == default else MUTED,
-            corner_radius=5, font=(FONT, 9),
+            corner_radius=5, font=(FONT, 10),
             command=lambda v=val: _click(v))
         b.pack(side="left", padx=2, pady=2)
         btns[val] = b
