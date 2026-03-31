@@ -108,7 +108,6 @@ SettingsWindow
 | `btn_reset_region` | CTkButton | — | `"↺ Reset"` |
 | `delay_slider` | CTkSlider | `app.delay_sec` | — |
 | `delay_val_lbl` | CTkLabel | — | `"{n}s"` |
-| `ts_format_entry` | CTkEntry | `app.ts_format` | — |
 
 ### Widget Behaviors
 
@@ -135,14 +134,7 @@ SettingsWindow
 - **Var:** `app.delay_sec` (IntVar, 0–10)
 - **On change:** Value label shows `"{n}s"`. Saved via autosave.
 - **Effect:** When > 0, `CountdownOverlay` shows before capture
-
-#### `ts_format_entry` — Timestamp Format
-
-- **Var:** `app.ts_format` (StringVar)
-- **Default:** `"%d/%m/%Y  %H:%M:%S"`
-- **On change:** Saved via autosave. Preview re-renders.
-- **Preset buttons:** `"DD/MM"` → `"%d/%m/%Y %H:%M:%S"`, `"ISO"` → `"%Y-%m-%d %H:%M"`
-- **Error state:** Invalid strftime format → `apply_timestamp()` falls back to `"%Y-%m-%d %H:%M:%S"` silently via `safe_strftime()`
+- **Auto-reset:** Resets to 0 after every screenshot capture
 
 ---
 

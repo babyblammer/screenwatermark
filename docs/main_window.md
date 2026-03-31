@@ -9,7 +9,7 @@
 
 | Event | Behavior |
 |---|---|
-| Launch | Window appears at 620×580. WM accordion open. TS accordion closed. Preview panel active. |
+| Launch | Window appears at 620×580. Preview panel active. WM and TS cards always visible. |
 | Close button (X) | App hides to tray (`_hide_to_tray()`). Window does NOT quit. |
 | Quit | Only via tray → Quit or `_quit_app()`. Saves settings + history before destroy. |
 | `--startup` flag | If `start_minimized=True` AND launched via `--startup`, hides to tray immediately. |
@@ -82,10 +82,11 @@
 
 ```
 ① self.panel_toggle          _build_panel_toggle()
-② self.preview_wrap          _build_preview_panel()      ← ALWAYS before accordions
+② self.preview_wrap          _build_preview_panel()      ← Preview panel
 ③ self.history_panel_wrap    _build_history_panel()      ← hidden on launch
-④ self._wm_accordion         _build_wm_accordion()
-⑤ self._ts_accordion         _build_ts_accordion()
+④ self._wm_card              _build_wm_card()
+⑤ self._ts_card              _build_ts_card()
+⑥ self.bottom_bar            _build_bottom_bar()         ← Settings, Fullscreen, Region
 ```
 
 ---
@@ -220,12 +221,11 @@ history_panel_wrap
 
 ---
 
-## Section 2.4 — WM Accordion
+## Section 2.4 — WM Card
 
-**Builder:** `_build_wm_accordion(self.middle_frame)`
-**Component:** `CTkAccordion` from `ui/widgets/accordion.py`
-**Variable:** `self._wm_accordion`
-**Default state:** Open (`open_by_default=True`, `self._wm_acc_open = True`)
+**Builder:** `_build_wm_card(self.middle_frame)`
+**Container:** `CTkFrame(fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)`
+**Variable:** `self._wm_card`
 **Pack:** `fill="x", padx=12, pady=(0,6)` inside `middle_frame`
 
 ### Header row widgets
@@ -235,102 +235,84 @@ history_panel_wrap
 | Icon label `💧` | Static, no interaction |
 | Title label `"Watermark"` | Static |
 | Summary label `self._wm_summary_lbl` | Updated by `_update_wm_summary()` on every `wm_*` var change |
-| Chevron label `▲`/`▼` | Rotates on toggle: `▲` = open, `▼` = closed |
-| Header frame | Click anywhere on header → `_toggle_wm_accordion()` |
 
 ### Summary string format
 
 ```python
 # WM enabled:
-"Normal · logo.png · 20% · 70% op"   # Normal/Pattern mode
-"Full · logo.png · 70% op"            # Full mode (no scale)
+"Normal · Bottom-Left · 70% · 20%"    # Normal mode
+"Pattern · 70% · 20%"                   # Pattern mode (no position)
+"Full Screen · 70%"                     # Full mode (no scale, no position)
 
 # WM disabled:
 "OFF"
 ```
 
-### `_toggle_wm_accordion()`
-
-- Toggles `self._wm_acc_open`
-- If opening: `_wm_body.pack(fill="x", padx=12, pady=(0,12))` + auto-scroll via `_scroll_to(self._wm_accordion)`
-- If closing: `_wm_body.pack_forget()`
-- Auto-scroll: `after(60ms)` delay to let pack settle before scrolling
-
 ### Body — Row 1 widgets
 
-#### Enable pill toggle
-
-- **Var:** `self.wm_enabled` (BooleanVar)
-- **On "ON":** `wm_enabled.set(True)` → `_update_wm_indicator()` + `_update_wm_summary()`
-- **On "OFF":** `wm_enabled.set(False)` → badge → `"WM OFF"`. All body controls visually dimmed but remain interactive.
-- **Note:** Disabling WM does not hide body controls — user can still configure while disabled.
-
-#### Mode OptionMenu
+#### Mode dropdown (CTkOptionMenu)
 
 - **Var:** `self.wm_mode` (StringVar)
-- **Values:** `["normal", "full", "pattern"]`
-- **On change:** `_on_wm_mode_change_inline()` → show/hide position and scale controls
+- **Values:** `["Off", "Normal", "Full Screen", "Pattern"]`
+- **On change:** `_on_wm_mode_change()` → syncs `wm_enabled` + shows/hides controls
 
-| Mode | Position row | Scale row |
-|---|---|---|
-| `normal` | ✅ visible | ✅ visible |
-| `full` | ❌ hidden | ❌ hidden |
-| `pattern` | ❌ hidden | ✅ visible |
+| Mode | `wm_enabled` | Position | Scale | Pattern Gap |
+|---|---|---|---|---|
+| `Off` | `False` | disabled | disabled | disabled |
+| `Normal` | `True` | ✅ enabled | ✅ enabled | disabled |
+| `Full Screen` | `True` | disabled | disabled | disabled |
+| `Pattern` | `True` | disabled | ✅ enabled | ✅ enabled |
 
-#### Position OptionMenu (hidden in Full/Pattern)
+#### Position dropdown (CTkOptionMenu) — only for Normal mode
 
 - **Var:** `self.wm_position` (StringVar)
-- **Values:** `["bottom-left", "bottom-right", "top-left", "top-right", "center"]`
-- **Hidden by:** `_wm_pos_menu.pack_forget()` when mode ≠ normal
+- **Values:** `["Bottom-Left", "Bottom-Right", "Top-Left", "Top-Right", "Center"]`
 
-#### Opacity CTkSlider
+#### Opacity slider
 
 - **Var:** `self.wm_opacity` (IntVar, 0–100)
-- **On change:** Value label `self._wm_op_val` updates live. `_on_setting_changed()` fires → preview re-renders after 350ms debounce.
+- **On change:** Value label updates. `_on_setting_changed()` fires → preview re-renders after 350ms debounce.
 
 ### Body — Row 2 widgets
 
-#### Scale CTkSlider (hidden in Full mode)
+#### Scale slider (hidden in Full Screen mode)
 
 - **Var:** `self.wm_scale` (IntVar, 5–60)
-- **On change:** Value label `self._wm_sc_val` updates live. Preview re-renders.
-- **Hidden by:** `self._wm_row2.pack_forget()` when mode = full
+- **On change:** Value label updates. Preview re-renders.
 
-#### File picker button `"Choose…"`
+#### Pattern Gap slider — only for Pattern mode
 
-- **On click:** `_pick_watermark()` → `filedialog.askopenfilename(filetypes=[("Image","*.png *.jpg *.jpeg *.gif *.bmp *.webp")])`
-- **On file selected:** `watermark_path.set(path)` → `_wm_fname_lbl` updates → `invalidate_wm_cache()` → preview re-renders
-- **On cancel:** No change
+- **Var:** `self.wm_pattern_gap` (IntVar, 0–100)
+- **On change:** Value label updates. Preview re-renders.
 
-#### Filename label `self._wm_fname_lbl`
+#### Path row
 
-| State | Text | `text_color` |
-|---|---|---|
-| File set | `os.path.basename(path)` | `SUCCESS` |
-| No file | `t("no_file")` | `MUTED` |
-
-#### Clear button `"✕"`
-
-- **On click:** `_clear_watermark_path_inline()` → `watermark_path.set("")` → `invalidate_wm_cache()` → badge → `WM ⚠`
-- **Always visible** (not hidden when no file is set)
+- **Label:** Shows `os.path.basename(path)` or `t("no_file")`
+- **Browse button:** `_pick_watermark()` → `filedialog.askopenfilename()`
+- **Clear button:** `_clear_watermark_path()` → `watermark_path.set("")`
 
 ---
 
-## Section 2.5 — TS Accordion
+## Section 2.5 — TS Card
 
-**Builder:** `_build_ts_accordion(self.middle_frame)`
-**Component:** `CTkAccordion` from `ui/widgets/accordion.py`
-**Variable:** `self._ts_accordion`
-**Default state:** Closed (`open_by_default=False`, `self._ts_acc_open = False`)
+**Builder:** `_build_ts_card(self.middle_frame)`
+**Container:** `CTkFrame(fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)`
+**Variable:** `self._ts_card`
 **Pack:** `fill="x", padx=12, pady=(0,6)` inside `middle_frame`
 
-- Both WM and TS can be open simultaneously. No exclusive-close logic.
+### Header row widgets
+
+| Widget | Behavior |
+|---|---|
+| Icon label `🕐` | Static, no interaction |
+| Title label `"Timestamp"` | Static |
+| Summary label `self._ts_summary_lbl` | Updated by `_update_ts_summary()` on every `ts_*` var change |
 
 ### Summary string format
 
 ```python
 # TS enabled:
-"✓ ↘ · 22px · #FFFFFF"    # position arrow · font size · text color
+"Outside · 22px · #FFFFFF"
 
 # TS disabled:
 "OFF"
@@ -338,16 +320,21 @@ history_panel_wrap
 
 ### Body — Row 1 widgets
 
-#### Enable dropdown (4.0.0b)
+#### Enable dropdown (CTkOptionMenu)
 
 - **Var:** `self.ts_enable` (StringVar) + `self.ts_enabled`, `self.ts_outside_canvas` (BooleanVar)
 - **Values:** `["Off", "Outside"]`
 - **On "Off":** Timestamp disabled. Controls disabled.
-- **On "Outside":** Timestamp strip at bottom of image.
+- **On "Outside":** Timestamp strip at bottom-right of image.
+
+#### Format dropdown (CTkOptionMenu)
+
+- **Var:** `self.ts_format` (StringVar)
+- **Values:** `["DD/MM/YYYY HH:MM:SS", "ISO 8601", "MM/DD/YYYY HH:MM:SS", "YYYY-MM-DD"]`
 
 ### Body — Row 2 widgets
 
-#### Font size CTkSlider
+#### Font size slider
 
 - **Var:** `self.ts_font_size` (IntVar, 10–60)
 - **On change:** Value label updates. Preview re-renders.
@@ -356,49 +343,52 @@ history_panel_wrap
 #### Text color swatch button
 
 - **Var:** `self.ts_color` (StringVar, hex)
-- **On click:** `_pick_color_inline(self.ts_color, self._ts_color_btn)` → `colorchooser.askcolor()`
+- **On click:** `_pick_color()` → `colorchooser.askcolor()`
 - **On color selected:** Button `fg_color` updates to new color. Preview re-renders.
 - **On cancel:** No change.
 
-#### BG color swatch button
-
-- **Var:** `self.ts_bg_color` (StringVar, hex)
-- **On click:** Same as text color swatch
-- **Note:** BG opacity is controlled separately via `ts_bg_opacity` (in Settings window only)
-
-#### Bold pill toggle
-
-- **Var:** `self.ts_bold` (BooleanVar)
-- **On change:** Preview re-renders with bold/normal font
-
-#### Shadow pill toggle
-
-- **Var:** `self.ts_shadow` (BooleanVar)
-- **On change:** Preview re-renders with/without shadow offset
-
 ---
 
-## Section 3 — Action Bar
+## Section 3 — Bottom Bar
 
-**Builder:** `_build_action_bar()`
-**Container:** `CTkFrame(fg_color=PANEL, height=52, corner_radius=0)`
+**Builder:** `_build_bottom_bar()`
+**Container:** `CTkFrame(fg_color=PANEL, height=44, corner_radius=0)`
+**Variable:** `self.bottom_bar`
 **Pack:** `fill="x", side="bottom"` on `self`
 
 ### Widget Table
 
 | Widget ID | Type | Variable | Default state |
 |---|---|---|---|
-| `status_lbl` | CTkLabel | `self.status_var` (StringVar) | Ready message |
-| `btn_copy` | CTkButton | — | `state="disabled"` |
+| `btn_settings` | CTkButton | — | `state="normal"` |
 | `btn_fullscreen` | CTkButton | — | `state="normal"` |
 | `btn_region` | CTkButton | — | `state="normal"` |
+| `status_lbl` | CTkLabel | `self.status_var` (StringVar) | Ready message |
 
 ### Widget Behaviors
+
+#### `btn_settings` — Open Settings
+
+- **On click:** `_open_settings()` — creates or deiconifies `SettingsWindow`
+- **Style:** `fg_color="#2a2a3e", hover_color="#3a3a50"`
+
+#### `btn_fullscreen` — Fullscreen Screenshot
+
+- **On click:** `_trigger_fullscreen()` → `capture_mode.set("fullscreen")` → `_start_screenshot()`
+- **Disabled during:** Entire screenshot flow
+- **Style:** `fg_color=ACCENT, hover_color="#7d75ff"`
+- **Hotkey equivalent:** `hotkey_fullscreen` (default: Print Screen)
+
+#### `btn_region` — Region Screenshot
+
+- **On click:** `_trigger_region()` → `capture_mode.set("region")` → `_start_screenshot()`
+- **Disabled during:** Entire screenshot flow
+- **Style:** `fg_color=ACCENT2, hover_color="#ff7580"`
 
 #### `status_lbl` — Status Bar
 
 - **Var:** `self.status_var` (StringVar)
-- **Default text:** `f"Ready — {_preset_label(hotkey_fullscreen)} | {_preset_label(hotkey_region)} | {_preset_label(hotkey_history)}"`
+- **Default text:** `f"Ready — {_preset_label(hotkey_fullscreen)} | {_preset_label(hotkey_region)}"`
 - **Updates:**
 
 | Event | Status text |
@@ -409,35 +399,7 @@ history_panel_wrap
 | Countdown active | `"⏳ Screenshot in {n} seconds… (Esc = cancel)"` |
 | Countdown cancelled | `"Cancelled."` |
 | Settings autosaved | `"✓ Settings saved"` |
-| History item copied | `"✓ History item copied to clipboard!"` |
 | Restores after 3s | Returns to default hotkey summary text |
-
-#### `btn_copy` — Copy Last Image
-
-- **On click:** `_copy_to_clipboard()` → copies `self.last_image` to clipboard
-- **Disabled when:** `self.last_image is None` (fresh launch, no screenshots taken)
-- **Enabled when:** After any successful screenshot or history item load
-- **Style active:** `bg=ACCENT2` → briefly `bg=SUCCESS` on success → back to `ACCENT2`
-- **Error:** If clipboard fails → `messagebox.showerror()`
-
-#### `btn_fullscreen` — Fullscreen Screenshot
-
-- **On click:** `_trigger_fullscreen()` → `capture_mode.set("fullscreen")` → `_start_screenshot()`
-- **Disabled during:** Entire screenshot flow (from click until `_do_screenshot()` finally block)
-- **Style:** `fg_color=ACCENT, hover_color="#7d75ff"`, left-rounded corners
-- **Hotkey equivalent:** `hotkey_fullscreen` (default: Print Screen)
-
-#### `btn_region` — Region Screenshot
-
-- **On click:** `_trigger_region()` → `capture_mode.set("region")` → `_start_screenshot()`
-- **Disabled during:** Entire screenshot flow
-- **Style:** `fg_color="#32324e", hover_color="#404060"`, right-rounded corners
-- **Hotkey equivalent:** `hotkey_region` (default: Ctrl+Shift+F9)
-
-#### `_set_shot_buttons(enabled: bool)`
-
-- Called with `False` at `_start_screenshot()` entry
-- Called with `True` in `_do_screenshot()` finally block + `_on_region_cancelled()` + `_cancel_countdown()`
 
 ---
 
