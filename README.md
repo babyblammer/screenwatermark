@@ -9,9 +9,31 @@ Supports fullscreen and region capture, system tray operation, and persistent hi
 
 This app is the result of a Vibe Coding project, 98% of whose codebase was written by AI. It originated when the creator—who works as a graphic designer—needed an app capable of adding a watermark to screenshots of their work.
 
-The app project was completed in approximately four weeks, starting from the initial conceptualisation, workflow planning, ideation and requirements research.
+The app project was completed in approximately four weeks (112 hours in total), starting from the initial conceptualisation, workflow planning, ideation and requirements research.
 
 The codebase was developed by Claude and Big Pickle (Opencode).
+
+
+Currently available features:
+- Full-screen and region screenshots
+- Watermark mode (Normal, Full-screen, Pattern)
+- Timestamp mode
+- History
+- Delayed capture
+- History pop-up
+- Run at startup
+- Run in system tray
+- All notifications
+- Custom Tkinter UI
+- .jpg/png files supported
+
+Features to be implemented:
+- Localization
+- Stealth mode
+- SVG & custom text watermark support
+- Free position watermark mode
+- UI 2.0
+- OTA Updater
 
 Run and tested on Windows 10
 
