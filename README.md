@@ -53,7 +53,7 @@ See `docs/Programmer_Test_Setup_Guide.md` for full instructions.
 
 | Doc | Purpose |
 |---|---|
-| [Modular Architecture](.docs/Modular_Architecture_Proposal_v8.0.md) | Why modular first, structure rationale |
+| [Modular Architecture](docs/Modular_Architecture_Proposal_v8.0.md) | Why modular first, structure rationale |
 | `docs/Migration_Plan_v8.0.md` | Phase plan M1–M3 + P0–P7 + GC |
 | `docs/Implementation_Guideline_v8.0.md` | Step-by-step code for programmer |
 | `docs/UI_UX_Spec_v8.0.md` | Widget specs, palette, layout |
