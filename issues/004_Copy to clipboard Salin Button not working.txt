@@ -1,9 +1,0 @@
-BUG: WM and TS accordion not yet implemented
-DESC: User trying to open screenwatermark/main.py, and saw that wm and ts accordion not show in preview configuration but was removed in setting.
-STEPS: Oen app, click preview button, notice that wm and ts config are missing.
-EXPECTED: wm and ts accordion configuration should appear.
-ACTUAL: wm and ts accordion configuration not appear.
-ENV: Windows 10
-LOGS: -
-SEVERITY: CRITICAL
-NOTES: 
