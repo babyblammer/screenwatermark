@@ -40,7 +40,7 @@ def apply_watermark(img: "Image.Image", cfg: dict) -> "Image.Image":
         return Image.alpha_composite(base, layer).convert("RGB")
 
     if wm_mode == "pattern":
-        WM_PATTERN_GAP = 20
+        pattern_gap = cfg.get("wm_pattern_gap", 20)
         iw, ih   = img.size
         scale    = max(5, cfg["wm_scale"])
         new_w    = max(1, int(iw * scale / 100))
@@ -48,8 +48,8 @@ def apply_watermark(img: "Image.Image", cfg: dict) -> "Image.Image":
         wm_r = _get_wm_resized(cfg["watermark_path"], new_w, new_h)
         if wm_r is None: return img
         wm_r = _apply_opacity(wm_r.copy())
-        step_x = new_w  + WM_PATTERN_GAP
-        step_y = new_h  + WM_PATTERN_GAP
+        step_x = new_w  + pattern_gap
+        step_y = new_h  + pattern_gap
         layer = Image.new("RGBA", base.size, (0, 0, 0, 0))
         y = 0
         while y < ih:
@@ -95,59 +95,27 @@ def apply_timestamp(img: "Image.Image", cfg: dict,
                     capture_time: "datetime | None" = None) -> "Image.Image":
     if not cfg["ts_enabled"]: return img
     ts_text = safe_strftime(cfg["ts_format"], capture_time or datetime.now())
-    base_size  = cfg["ts_font_size"]
-    img_w      = img.width
-    dyn_size   = max(10, min(base_size, img_w // 50))
-    font       = load_font(dyn_size, bold=cfg.get("ts_bold", False))
+    base_size = cfg["ts_font_size"]
+    img_w = img.width
+    dyn_size = max(10, min(base_size, img_w // 50))
+    font = load_font(dyn_size, bold=cfg.get("ts_bold", False))
 
-    if cfg.get("ts_outside_canvas", False):
-        draw_tmp = ImageDraw.Draw(Image.new("RGB", (1,1)))
-        bbox     = draw_tmp.textbbox((0,0), ts_text, font=font)
-        tw, th   = bbox[2]-bbox[0], bbox[3]-bbox[1]
-        pad      = 10
-        strip_h  = th + pad * 2 + 4
-        w, h     = img.size
-        pos      = cfg["ts_position"]
+    draw_tmp = ImageDraw.Draw(Image.new("RGB", (1,1)))
+    bbox = draw_tmp.textbbox((0,0), ts_text, font=font)
+    tw, th = bbox[2]-bbox[0], bbox[3]-bbox[1]
+    pad = 10
+    strip_h = th + pad * 2 + 4
+    w, h = img.size
 
-        if pos in ("bottom-left", "bottom-right"):
-            new_img = Image.new("RGB", (w, h + strip_h), (255, 255, 255))
-            new_img.paste(img, (0, 0))
-            strip_y = h
-        else:
-            new_img = Image.new("RGB", (w, h + strip_h), (255, 255, 255))
-            new_img.paste(img, (0, strip_h))
-            strip_y = 0
+    new_img = Image.new("RGB", (w, h + strip_h), (255, 255, 255))
+    new_img.paste(img, (0, 0))
+    strip_y = h
 
-        draw = ImageDraw.Draw(new_img)
-        if pos in ("bottom-right", "top-right"):
-            tx = w - tw - pad - 10
-        else:
-            tx = pad + 10
-        ty = strip_y + pad
-        if cfg["ts_shadow"]:
-            draw.text((tx+1, ty+1), ts_text, font=font, fill=(180,180,180,255))
-        draw.text((tx, ty), ts_text, font=font,
-                  fill=safe_hex_to_rgb(cfg["ts_color"]) + (255,))
-        return new_img
-    else:
-        base    = img.convert("RGBA")
-        overlay = Image.new("RGBA", base.size, (0,0,0,0))
-        draw    = ImageDraw.Draw(overlay)
-        bbox    = draw.textbbox((0,0), ts_text, font=font)
-        tw, th  = bbox[2]-bbox[0], bbox[3]-bbox[1]
-        pad, margin = 10, 20
-        w, h = img.size
-        pos  = cfg["ts_position"]
-        if   pos == "bottom-right": x, y = w-tw-pad*2-margin, h-th-pad*2-margin
-        elif pos == "bottom-left":  x, y = margin,             h-th-pad*2-margin
-        elif pos == "top-right":    x, y = w-tw-pad*2-margin,  margin
-        else:                       x, y = margin,              margin
-        bg_op = int(max(0, min(100, cfg["ts_bg_opacity"])) / 100 * 255)
-        draw.rounded_rectangle([x-2,y-2,x+tw+pad*2+2,y+th+pad*2+2], radius=6,
-                                fill=safe_hex_to_rgb(cfg["ts_bg_color"])+(bg_op,))
-        tx, ty = x+pad, y+pad
-        if cfg["ts_shadow"]:
-            draw.text((tx+2,ty+2), ts_text, font=font, fill=(0,0,0,160))
-        draw.text((tx,ty), ts_text, font=font,
-                  fill=safe_hex_to_rgb(cfg["ts_color"])+(255,))
-        return Image.alpha_composite(base, overlay).convert("RGB")
+    draw = ImageDraw.Draw(new_img)
+    tx = w - tw - pad - 10
+    ty = strip_y + pad
+    if cfg.get("ts_shadow"):
+        draw.text((tx+1, ty+1), ts_text, font=font, fill=(180,180,180,255))
+    draw.text((tx, ty), ts_text, font=font,
+              fill=safe_hex_to_rgb(cfg["ts_color"]) + (255,))
+    return new_img

@@ -149,20 +149,14 @@ Status: `PASS` | `FAIL` | `SKIP` | `BLOCKED` | `PENDING`
 
 | ID | Title | Steps | Expected | Status | Notes |
 |---|---|---|---|---|---|
-| TC-P4-001 | TS accordion collapsed on launch | Launch | TS body hidden | PENDING | Auto |
-| TC-P4-002 | Expand / collapse | Click header twice | Opens then closes | PENDING | Auto |
-| TC-P4-003 | Both accordions open simultaneously | Open WM, then open TS | Both bodies visible, no exclusive close | PENDING | Auto |
-| TC-P4-004 | Enable OFF removes TS from preview | Toggle OFF | Canvas preview changes | PENDING | Auto |
-| TC-P4-005 | Outside toggle updates var | Toggle ON | `ts_outside_canvas.get()==True` | PENDING | Auto |
-| TC-P4-006 | Position dropdown updates var | Change position | `ts_position.get()` matches selection | PENDING | Auto |
-| TC-P4-007 | Font size slider 10–60 | Drag slider | `ts_font_size.get()` matches | PENDING | Auto |
-| TC-P4-008 | Text color swatch | Click swatch | OS color picker opens | PENDING | Manual |
-| TC-P4-009 | BG color swatch | Click BG swatch | OS color picker opens | PENDING | Manual |
-| TC-P4-010 | Bold toggle | Toggle ON | `ts_bold.get()==True` | PENDING | Auto |
-| TC-P4-011 | Shadow toggle | Toggle OFF | `ts_shadow.get()==False` | PENDING | Auto |
-| TC-P4-012 | Summary string updates | Change pos/size | Header summary reflects values | PENDING | Auto |
-| TC-P4-013 | TS outside canvas screenshot | Outside ON, take shot | Image height > screen height | PENDING | Auto |
-| TC-P4-014 | TS overlay screenshot | Outside OFF, take shot | Image height == screen height | PENDING | Auto |
+| TC-P4-001 | TS card frame on launch | Launch | TS card visible with summary | PENDING | Auto |
+| TC-P4-002 | Enable dropdown Off | Select "Off" | Controls disabled, summary "Off" | PENDING | Auto |
+| TC-P4-003 | Enable dropdown Outside | Select "Outside" | Controls enabled, summary shows mode | PENDING | Auto |
+| TC-P4-004 | Font size slider 10–60 | Drag slider | `ts_font_size.get()` matches, label updates | PENDING | Auto |
+| TC-P4-005 | Text color swatch | Click swatch | OS color picker opens | PENDING | Manual |
+| TC-P4-006 | TS controls disabled when Off | Select "Off" | Font slider, color btn disabled | PENDING | Auto |
+| TC-P4-007 | TS screenshot outside mode | Outside ON, take shot | Image height > screen height | PENDING | Auto |
+| TC-P4-008 | TS screenshot off mode | Off ON, take shot | No timestamp strip added | PENDING | Auto |
 
 ---
 

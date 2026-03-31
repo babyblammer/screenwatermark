@@ -39,13 +39,6 @@ class SettingsWindow(ctk.CTkToplevel):
     def _on_close(self):
         self.withdraw()
 
-    def _build_removed_notice(self, parent):
-        notice = ctk.CTkFrame(parent, fg_color="#180d0d", corner_radius=7)
-        notice.pack(fill="x", pady=(0, 8))
-        ctk.CTkLabel(notice, text="\u2718  Watermark config  →  main window accordion\n\u2718  Timestamp config  →  main window accordion",
-                     font=(FONT_MONO, 10.5, "italic"), text_color="#7a3a3a", anchor="w", justify="left"
-                     ).pack(padx=12, pady=8)
-
     def _build_ui(self):
         header = ctk.CTkFrame(self, fg_color=PANEL, height=42, corner_radius=0)
         header.pack(fill="x")
@@ -61,10 +54,9 @@ class SettingsWindow(ctk.CTkToplevel):
 
         scroll = ctk.CTkScrollableFrame(self, fg_color=BG,
                                          scrollbar_button_color=ACCENT,
-                                         scrollbar_button_hover_color=ACCENT2)
+                                         scrollbar_button_hover_color="#7d75ff")
         scroll.pack(fill="both", expand=True, padx=10, pady=(8, 0))
         
-        self._build_removed_notice(scroll)
         self._card(scroll, t("startup"), self._build_startup_card)
         self._card(scroll, t("capture"), self._build_capture_card)
         self._card(scroll, t("hotkeys"), self._build_hotkey_card)
@@ -124,10 +116,12 @@ class SettingsWindow(ctk.CTkToplevel):
         def update_val(v):
             val_lbl.configure(text=f"{int(float(v))} {unit}")
         
+        if var == self.app.delay_sec:
+            self.delay_val_lbl = val_lbl
+        
         slider = ctk.CTkSlider(row, from_=from_, to=to, variable=var,
-                               progress_color=ACCENT, button_color=ACCENT2,
-                               button_hover_color=ACCENT,
-                               command=update_val)
+                       fg_color=BORDER, progress_color=ACCENT,
+                       command=update_val)
         slider.pack(side="left", fill="x", expand=True, padx=(6, 0))
 
     def _on_reset_default(self):
@@ -192,56 +186,7 @@ class SettingsWindow(ctk.CTkToplevel):
     def _build_capture_card(self, p):
         app = self.app
 
-        mode_row = ctk.CTkFrame(p, fg_color=CARD)
-        mode_row.pack(fill="x", pady=(0, 6))
-        
-        ctk.CTkLabel(mode_row, text=t("default_mode") + ":", font=(FONT, 13),
-                     text_color=TEXT, anchor="w").pack(side="left")
-        
-        def on_mode_change(val):
-            app.capture_mode.set(val)
-        
-        mode_opt = ctk.CTkOptionMenu(mode_row, values=["Fullscreen", "Region"],
-                                      command=on_mode_change, width=100,
-                                      fg_color=BORDER, button_color=ACCENT,
-                                      button_hover_color=ACCENT2)
-        mode_opt.set("Fullscreen" if app.capture_mode.get() == "fullscreen" else "Region")
-        mode_opt.pack(side="left", padx=(8, 0))
-
-        region_row = ctk.CTkFrame(p, fg_color=CARD)
-        region_row.pack(fill="x", pady=(0, 4))
-        
-        self.region_label = ctk.CTkLabel(region_row, text=app._region_text(),
-                                          font=(FONT, 13), text_color=TEXT, anchor="w")
-        self.region_label.pack(side="left")
-        
-        ctk.CTkButton(region_row, text="\u21bb Reset", font=(FONT, 13),
-                       fg_color=CARD, text_color=MUTED, hover_color=BORDER,
-                       corner_radius=6, border_width=1, border_color=BORDER,
-                       width=70, height=28, command=app._reset_region
-                       ).pack(side="right")
-
         self._slider_row(p, t("delay") + ":", app.delay_sec, 0, 10, "s")
-
-        fmt_row = ctk.CTkFrame(p, fg_color=CARD)
-        fmt_row.pack(fill="x", pady=(4, 2))
-        
-        ctk.CTkLabel(fmt_row, text="TS Format:", font=(FONT, 13),
-                     text_color=TEXT, anchor="w").pack(side="left")
-        
-        fmt_entry = ctk.CTkEntry(fmt_row, textvariable=app.ts_format,
-                                  width=140, fg_color=BORDER,
-                                  border_color=BORDER, font=(FONT, 13))
-        fmt_entry.pack(side="left", padx=(8, 4))
-        
-        for lbl, fmt in [("DD/MM", "%d/%m/%Y %H:%M:%S"), ("ISO", "%Y-%m-%d %H:%M")]:
-            def set_fmt(f=fmt):
-                app.ts_format.set(f)
-            ctk.CTkButton(fmt_row, text=lbl, font=(FONT, 13),
-                           fg_color=CARD, text_color=MUTED, hover_color=BORDER,
-                           corner_radius=6, border_width=1, border_color=BORDER,
-                           width=60, height=28, command=set_fmt
-                           ).pack(side="left")
 
     # ── Hotkey card ──────────────────────────────────────────────────────────
     def _build_hotkey_card(self, p):
@@ -299,8 +244,9 @@ class SettingsWindow(ctk.CTkToplevel):
         lang = "English" if get_language() == "en" else "Indonesian"
         lang_opt = ctk.CTkOptionMenu(row, values=["English", "Indonesian"],
                                       command=on_language_change, width=120,
-                                      fg_color=BORDER, button_color=ACCENT,
-                                      button_hover_color=ACCENT2)
+                                      fg_color=BORDER, button_color=BORDER,
+                                      button_hover_color=ACCENT,
+                                      dropdown_fg_color=PANEL, text_color=TEXT)
         lang_opt.set(lang)
         lang_opt.pack(side="left", padx=(8, 0))
         

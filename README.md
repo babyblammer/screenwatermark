@@ -3,7 +3,7 @@
 A screenshot utility that applies watermarks and timestamps to captured images.
 Supports fullscreen and region capture, system tray operation, and persistent history.
 
-**Current version:** v4.0.0 (in development — tkinter → customtkinter migration)
+**Current version:** v4.1.0a
 **Stable release:** v3.9.1f HF1
 
 ---

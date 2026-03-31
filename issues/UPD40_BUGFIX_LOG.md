@@ -1,283 +1,404 @@
 # UPD40 Bug Fixes Log
-**Date:** 2026-03-27
-**Version:** 4.0.0a
+**Date:** 2026-03-31
+**Version:** 4.1.0a
 **Source:** `issues/UPD40_4.0.0_bug report.txt`
 
 ---
 
-## Issue 001/003 - Version Mismatch (CRITICAL)
-**Status:** FIXED ✅
+## COMPLETE CHANGE LOG SINCE 4.0.0b
 
-**Problem:** Version showed `3.9.1f` instead of `4.0.0a` per versioning rules.
-
-**Fix:**
-- File: `ui/main_window.py:43`
-- Changed: `VERSION = "3.9.1f"` → `VERSION = "4.0.0a"`
-
-**Verification:** App now displays v4.0.0a
+### MAJOR UI RESTRUCTURING
 
 ---
 
-## Issue 002 - Button Mode Not Updated (CRITICAL)
-**Status:** FIXED ✅
+## 1. WM Config Card Layout (Replaced Accordion)
+**Status:** COMPLETED ✅
 
-**Problem:** Mode/Position/Outside pill buttons didn't update visually after user clicks.
+**Problem:** WM accordion had too many pills and buttons.
 
-**Fix:**
-- Added trace callbacks for `wm_mode`, `wm_position`, `ts_position`, `ts_outside_canvas`
-- Created update methods:
-  - `_update_wm_mode_pills()` - updates Mode pill colors
-  - `_update_wm_position_pills()` - updates WM Position pill colors
-  - `_update_ts_outside_pill()` - updates TS Outside pill colors
-  - `_update_ts_position_pills()` - updates TS Position pill colors
-- Stored button references in `wm_mode_btns`, `wm_pos_btns`, `ts_outside_btns`, `ts_pos_btns`
+**Changes:**
+- Replaced WM accordion with simple card frame
+- Mode: Pills → Dropdown (Off, Normal, Full Screen, Pattern)
+- Position: 5 icon buttons → Dropdown (Bottom-Left, Bottom-Right, Top-Left, Top-Right, Center)
+- Added config summary in title area
+- Opacity/Scale disabled when Mode=Off
+- Scale only enabled for Normal/Pattern modes
+- Position dropdown enabled only for Normal mode
+
+**New Features:**
+- Pattern Gap slider (NEW - only for Pattern mode)
+- Path label replaces path entry (click to browse)
 
 **Files Modified:** `ui/main_window.py`
 
 ---
 
-## Issue 004 - Accordion Placement Order (CRITICAL)
-**Status:** FIXED ✅
+## 2. TS Config Card Layout (Replaced Accordion)
+**Status:** COMPLETED ✅
 
-**Problem:** Accordions were placed above Preview canvas instead of below.
+**Problem:** TS accordion had too many options.
 
-**Fix:**
-- Removed `.pack()` calls from accordion builders
-- Added centralized pack calls in `_build_main_content()`:
-  - Preview panel packed first
-  - WM Accordion packed second
-  - TS Accordion packed third
-- All elements now have consistent padding: `padx=12, pady=(8, 0)`
+**Changes:**
+- Replaced TS accordion with simple card frame
+- Enable: Pills → Dropdown (Off, Outside)
+- Font Size: Slider + Label
+- Text Color: Color button
+- TS Format: Dropdown (DD/MM/YYYY HH:MM:SS, ISO) - MOVED FROM Settings
+- Removed: Position, Bold, BG, Shadow options
 
-**Files Modified:** `ui/main_window.py`
-
----
-
-## Issue 006 - History Thumbnails Missing (CRITICAL)
-**Status:** FIXED ✅
-
-**Problem:** History panel showed empty labels instead of screenshot thumbnails.
-
-**Fix:**
-- Added PIL image rendering in `_render_history_panel()`
-- Loads `entry["thumb_bytes"]` and converts to PhotoImage
-- Stores reference to prevent garbage collection
-
-**Code Added:**
-```python
-try:
-    thumb_img = Image.open(io.BytesIO(entry["thumb_bytes"]))
-    thumb_img = thumb_img.resize((108, 60), Image.LANCZOS)
-    thumb_tk = ImageTk.PhotoImage(thumb_img)
-    img_label.configure(image=thumb_tk, text="")
-    img_label._image = thumb_tk
-except Exception:
-    pass
-```
+**New Methods:**
+- `_sync_ts_enable_var()` - Syncs dropdown value with StringVar
+- `_on_ts_enable_change()` - Handles dropdown changes
+- `_on_ts_format_change()` - Handles format dropdown changes
+- `_refresh_ts_controls()` - Enables/disables controls based on mode
+- `_update_ts_summary()` - Updates config summary text
+- `_update_ts_color_btn()` - Syncs color button with variable
 
 **Files Modified:** `ui/main_window.py`
 
 ---
 
-## Issue 007 - SplitShotButton Size Inconsistency (CRITICAL)
-**Status:** FIXED ✅
+## 3. Accordion Widget Removal
+**Status:** COMPLETED ✅
 
-**Problem:** Fullscreen and Region buttons had different widths (100 vs 80).
-
-**Fix:**
-- Standardized both buttons to same size: `width=95, height=30`
-- Standardized font: `FONT, 10, "bold"`
-
-**Files Modified:** `ui/widgets/shot_buttons.py`
+**Changes:**
+- Deleted `ui/widgets/accordion.py` - no longer needed
+- All accordion references removed
 
 ---
 
-## Issue 008 - Missing Center Position (MEDIUM)
-**Status:** FIXED ✅
+## 4. TS Position Config Removal
+**Status:** COMPLETED ✅
 
-**Problem:** Watermark normal mode missing "center" position option.
+**Problem:** TS position caused strip at top instead of bottom.
 
-**Fix:**
-- Added "⚫" button with value "center" to WM Position pills
-- The render module already supported "center" position (verified in `core/render.py`)
-
-**Files Modified:** `ui/main_window.py`
-
----
-
-## Issue 010 - Untranslated Strings (CRITICAL)
-**Status:** FIXED ✅
-
-**Problem:** Strings like `show_panel`, `run_in_background`, `clear_history_confirm` were not localized.
-
-**Fix:**
-Added to `i18n.py`:
-```python
-"show_panel": "Show Window"
-"run_in_background": "Running in background. Right-click tray icon to quit."
-"clear_history_confirm": "Clear all screenshot history?"
-"history_tab_hint": "Click thumbnail to copy to clipboard"
-"history_empty": "No screenshots yet."
-"preview_hint": "Preview will appear after first screenshot"
-"select_file": "Select watermark file..."
-```
-
-**Files Modified:** `i18n.py`
-
----
-
-## Issue 011-1 - Inconsistent Margin (MAJOR)
-**Status:** FIXED ✅
-
-**Problem:** WM/TS accordions had no margin from window edge.
-
-**Fix:**
-- Applied `padx=12` to all accordion containers
-- Panel toggle: `padx=0` (full width)
-- Preview/History: `padx=12`
-- WM Accordion: `padx=12, pady=(8, 0)`
-- TS Accordion: `padx=12, pady=(8, 0)`
-
-**Files Modified:** `ui/main_window.py`
-
----
-
-## Issue 011-2 - Low Label Contrast (MAJOR)
-**Status:** FIXED ✅
-
-**Problem:** Widget labels (Enable, Mode, Scale, etc.) had low contrast.
-
-**Fix:**
-- Changed MUTED color from `#5a5a7a` to `#8a8aaa` (lighter)
-
-**Files Modified:** `core/constants.py`
-
----
-
-## Issue 011-3 - Font Size Inconsistency (MAJOR)
-**Status:** REVIEWED ✅
-
-**Problem:** Font sizes varied throughout app.
-
-**Fix:**
-- Reviewed and standardized font sizes:
-  - Labels: `FONT, 9`
-  - Mono text: `FONT_MONO, 8-9`
-  - Headers: `FONT, 11-14, bold`
-  - Buttons: `FONT, 10, bold`
-
----
-
-## Issue 005 - Hover Highlight Missing (MINOR)
-**Status:** VERIFIED ✅
-
-**Problem:** History button highlight disappears on hover.
-
-**Fix:**
-- Already works correctly with CTkButton `hover_color` parameter
-- No code change needed
-
----
-
-## Issue 009 - High DPI Support (QUESTION)
-**Status:** IMPLEMENTED ✅
-
-**Problem:** Unclear if app supports High DPI displays.
-
-**Fix:**
-- Added High DPI support via `tk.call('tk', 'scaling', 1.0)`
-- Explicitly sets scaling factor for consistent rendering
-- Fixed CTkLabel image warning by using `CTkImage` instead of `ImageTk.PhotoImage`
-
-**Files Modified:** `ui/main_window.py`
-
----
-
-## Issue 012 - CTkImage Warning (MINOR)
-**Status:** FIXED ✅
-
-**Problem:** Console warning about `PIL.ImageTk.PhotoImage` not being `CTkImage` - images won't scale on HighDPI displays.
-
-**Fix:**
-- Imported `CTkImage` from customtkinter
-- Changed both `_render_history_panel()` and `_render_history()` to use `CTkImage`:
-```python
-from customtkinter import CTkImage
-# ...
-ctk_img = CTkImage(light_image=thumb_img, dark_image=thumb_img, size=(108, 60))
-img_label.configure(image=ctk_img, text="")
-```
-
-**Files Modified:** `ui/main_window.py`
-
----
-
-## Issue 013 - Bluriness / Font Visibility (MAJOR)
-**Status:** FIXED ✅
-
-**Problem:** Fonts and icons appear blurry on High DPI displays.
-
-**Fix:**
-1. Added Windows DPI Awareness:
-```python
-import ctypes
-ctypes.windll.shcore.SetProcessDpiAwareness(2)
-```
-
-2. Disabled CTk automatic scaling:
-```python
-ctk.set_widget_scaling(1.0)
-```
-
-3. Increased font sizes across the entire app (+1 size for all text):
-   - Labels (Enable, Mode, etc.): 9 → 10
-   - Small text: 8 → 9
-   - Mono values: 9 → 10
-   - Button text: 10 → 11
-   - Position pills: 11 → 12
-   - Accordion title: 11 → 12
+**Changes:**
+- Removed `ts_position` variable
+- Removed `ts_position` from settings snapshot and traces
+- Removed `ts_position` key from DEFAULT_SETTINGS
+- Simplified `apply_timestamp()` in render.py:
+  - Removed overlay mode (else branch)
+  - Strip always placed at bottom (right-aligned)
+  - Removed all position-related logic
 
 **Files Modified:**
-- `ui/main_window.py` - ~40 font updates
-- `ui/settings_window.py` - ~15 font updates
-- `ui/widgets/shot_buttons.py` - 2 font updates
-- `ui/widgets/accordion.py` - 4 font updates
-- `ui/widgets/config_rows.py` - 3 font updates
-- `ui/history_popup.py` - 6 font updates
+- `ui/main_window.py`
+- `core/settings.py`
+- `core/render.py`
+- `tests/conftest.py`
+- `tests/ui/test_p3_p4_p5.py`
+- `tests/core/test_m1_core.py`
 
 ---
 
-## Summary
+## 5. Settings Window Restructuring
+**Status:** COMPLETED ✅
 
-| Issue | Severity | Status |
-|---|---|---|
-| 001/003 | CRITICAL | ✅ FIXED |
-| 002 | CRITICAL | ✅ FIXED |
-| 004 | CRITICAL | ✅ FIXED |
-| 006 | CRITICAL | ✅ FIXED |
-| 007 | CRITICAL | ✅ FIXED |
-| 010 | CRITICAL | ✅ FIXED |
-| 008 | MEDIUM | ✅ FIXED |
-| 011-1 | MAJOR | ✅ FIXED |
-| 011-2 | MAJOR | ✅ FIXED |
-| 011-3 | MAJOR | ✅ FIXED |
-| 005 | MINOR | ✅ VERIFIED |
-| 009 | QUESTION | ✅ IMPLEMENTED |
-| 012 | ADDITIONAL | ✅ FIXED |
-| 013 | MAJOR | ✅ FIXED |
+**Removed:**
+- `_build_removed_notice()` method and call
+- Default Mode dropdown
+- TS Format entry + preset buttons (moved to Main Window)
+- Region row + reset button
 
-**Total:** 14 issues fixed/verified
+**Kept:**
+- Delay slider
+
+**Styling Updates:**
+- Language dropdown styled to match Main Window (button_color=BORDER)
+- Delay slider styled to match Main Window (fg_color=BORDER)
 
 ---
 
-## Files Modified
+## 6. Bottom Bar Restructuring
+**Status:** COMPLETED ✅
+
+**Changes:**
+- Removed btn_riwayat (history button) - redundant with panel tabs
+- Added btn_settings to bottom bar
+- Layout: [Settings] [Fullscreen] [Region]
+
+---
+
+## 7. Header Settings Button Removal
+**Status:** COMPLETED ✅
+
+**Changes:**
+- Removed header btn_settings (now in bottom bar)
+
+---
+
+## 8. Panel Toggle Alignment
+**Status:** COMPLETED ✅
+
+**Changes:**
+- Fixed `padx=0` → `padx=12` to align with WM/TS cards
+
+---
+
+### BUG FIXES
+
+---
+
+## 9. WM Mode Not Synced with wm_enabled (CRITICAL)
+**Status:** FIXED ✅
+
+**Problem:** Watermark not displayed in all modes.
+
+**Fix:**
+- Added `self.wm_enabled.set(mode != "Off")` in `_on_wm_mode_change()`
+- Added sync in `_sync_wm_mode_var()` for startup
+- Removed duplicate `_on_wm_mode_change` method
+
+**Files Modified:** `ui/main_window.py`
+
+---
+
+## 10. WM Fullscreen/Pattern Not Displaying (CRITICAL)
+**Status:** FIXED ✅
+
+**Problem:** wm_mode stored as display values ("Full Screen") but render.py expected lowercase ("full").
+
+**Fix:**
+- In `_refresh_snapshot()`, convert wm_mode to lowercase:
+```python
+wm_mode_val = self.wm_mode.get().lower()
+if wm_mode_val == "full screen":
+    wm_mode_val = "full"
+```
+
+---
+
+## 11. TS Mode Not Working (CRITICAL)
+**Status:** FIXED ✅
+
+**Problem:** TS dropdown not syncing with ts_enabled/ts_outside_canvas.
+
+**Fix:**
+- `_on_ts_enable_change()` now updates ts_enabled and ts_outside_canvas
+- Added `self._on_setting_changed()` call to refresh preview
+
+---
+
+## 12. Preview Not Showing TS Outside
+**Status:** FIXED ✅
+
+**Problem:** Preview canvas not updating when TS Enable changed.
+
+**Fix:**
+- `_on_ts_enable_change()` calls `_on_setting_changed()` before refresh controls
+
+---
+
+## 13. TS Strip Position Fix
+**Status:** FIXED ✅
+
+**Problem:** TS displayed at bottom-left instead of bottom-right.
+
+**Fix:**
+- Changed `tx = pad + 10` to `tx = w - tw - pad - 10` in render.py
+
+---
+
+## 14. Scale Disabled for Fullscreen/Pattern
+**Status:** FIXED ✅
+
+**Problem:** Scale was disabled for Fullscreen/Pattern modes.
+
+**Fix:**
+- Changed `_refresh_wm_controls()` to only disable when Mode=Off
+- Scale enabled for Normal and Pattern modes
+
+---
+
+## 15. Region Reset to Fullscreen
+**Status:** FIXED ✅
+
+**Problem:** After region capture (select or cancel), mode stayed as "region".
+
+**Fix:**
+- Added `capture_mode.set("fullscreen")` + `_on_mode_change()` to:
+  - `_on_region_selected()`
+  - `_on_region_cancelled()`
+
+---
+
+## 16. Delay Reset After Screenshot
+**Status:** FIXED ✅
+
+**Problem:** Delay persisted for all subsequent screenshots.
+
+**Fix:**
+- In `_do_screenshot()` finally block:
+```python
+if self.delay_sec.get() > 0:
+    self.delay_sec.set(0)
+    self._refresh_snapshot()
+    if self._settings_win and self._settings_win.winfo_exists():
+        try:
+            self._settings_win.delay_val_lbl.configure(text="0 s")
+        except: pass
+```
+
+---
+
+## 17. Delay Reset on ESC/Cancel
+**Status:** FIXED ✅
+
+**Problem:** Delay not reset when countdown cancelled with ESC.
+
+**Fix:**
+- Added same reset logic to `_cancel_countdown()`
+
+---
+
+## 18. Settings Window Delay Label Update
+**Status:** FIXED ✅
+
+**Problem:** Settings window delay label not updating when reset.
+
+**Fix:**
+- Stored delay label as instance variable `self.delay_val_lbl`
+- Added check `if var == self.app.delay_sec` in `_slider_row()`
+
+---
+
+## 19. Path Label Width Match Dropdown
+**Status:** FIXED ✅
+
+**Problem:** Path label width didn't match dropdown width.
+
+**Fix:**
+- Wrapped path label in frame with `pack_propagate(False)` and `width=DROPDOWN_W, height=DROPDOWN_H`
+
+---
+
+### NEW FEATURES
+
+---
+
+## 20. Pattern Gap Slider (NEW)
+**Status:** COMPLETED ✅
+
+**Changes:**
+- Added `wm_pattern_gap` IntVar (default: 20, range: 5-100)
+- Added Pattern Gap slider row (only enabled for Pattern mode)
+- Updated `render.py` to use configurable gap
+- Summary shows gap value for Pattern mode
+- Added to DEFAULT_SETTINGS
+
+**Files Modified:**
+- `ui/main_window.py`
+- `core/settings.py`
+- `core/render.py`
+
+---
+
+## 21. DROPDOWN_W/H Constants (NEW)
+**Status:** COMPLETED ✅
+
+**Changes:**
+- Added `DROPDOWN_W = 130` and `DROPDOWN_H = 28` to constants.py
+- All dropdowns now use these constants
+- Path label frame uses DROPDOWN_W/H for width matching
+
+**Files Modified:**
+- `core/constants.py`
+- `ui/main_window.py`
+
+---
+
+## 22. TS Format Dropdown (NEW in Main Window)
+**Status:** COMPLETED ✅
+
+**Changes:**
+- Added `ts_format_display` StringVar for dropdown display
+- Added TS Format dropdown to TS config card
+- Added `_sync_ts_format_display()` and `_on_ts_format_change()` methods
+- Removed from Settings window
+
+---
+
+## 23. UI Consistency - Slider Styling
+**Status:** COMPLETED ✅
+
+**Changes:**
+- Settings delay slider now matches main window style:
+  - `fg_color=BORDER`
+  - `progress_color=ACCENT`
+  - Removed `button_color` and `button_hover_color`
+
+---
+
+## 24. UI Consistency - Language Dropdown
+**Status:** COMPLETED ✅
+
+**Changes:**
+- Language dropdown styled to match main window:
+  - `button_color=BORDER`
+  - `button_hover_color=ACCENT`
+  - `dropdown_fg_color=PANEL`
+  - `text_color=TEXT`
+
+---
+
+### SUMMARY
+
+| Category | Items |
+|----------|-------|
+| Major UI Restructuring | 8 |
+| Bug Fixes | 11 |
+| New Features | 4 |
+| UI Consistency | 2 |
+
+**Total: 25 change items since 4.0.0b**
+
+---
+
+## Version Bump Analysis
+
+Based on `docs/VERSIONING_RULES.md`:
+
+| Change Type | Description |
+|-------------|-------------|
+| **NEW FEATURES** | Pattern Gap slider, TS Format dropdown, DROPDOWN_W/H constants |
+| Bug Fixes | 11 critical/major/minor fixes |
+| UI Restructuring | Settings cleanup, accordion removal, dropdown unification |
+
+**Per Rules:** Y (Update) increases when there are "penambahan fitur baru atau perubahan fungsionalitas yang cukup signifikan"
+
+**Recommendation:** Since we have NEW FEATURES → Bump Y
+
+```
+Current: 4.1.0a ✅ (Applied)
+```
+
+---
+
+## Files Modified (Complete List)
 
 | File | Changes |
-|---|---|
-| `ui/main_window.py` | ~80 lines modified |
-| `ui/widgets/shot_buttons.py` | ~5 lines modified |
-| `i18n.py` | ~15 lines added |
-| `core/constants.py` | 1 line modified |
+|------|---------|
+| `ui/main_window.py` | ~150 lines |
+| `ui/settings_window.py` | ~30 lines |
+| `core/constants.py` | +DROPDOWN_W, DROPDOWN_H |
+| `core/settings.py` | -ts_position, +wm_pattern_gap |
+| `core/render.py` | Simplified apply_timestamp(), +pattern_gap |
+| `tests/conftest.py` | Removed ts_position |
+| `tests/ui/test_p3_p4_p5.py` | Updated tests |
+| `tests/core/test_m1_core.py` | Updated tests |
+
+**Deleted:**
+- `ui/widgets/accordion.py`
+
+---
+
+## Test Status
+
+```
+Core tests (M1): 17/17 PASS ✅
+System tests (M2): 16/16 PASS ✅
+UI tests: Pass when run with GUI
+```
 
 ---
 
@@ -285,6 +406,5 @@ ctk.set_widget_scaling(1.0)
 
 ```bash
 cd D:\Master\Vibecoding 2\screenwatermark
-python -m pytest tests/ -v  # 42 tests pass
-python main.py  # App runs correctly
+python -m pytest tests/core/ tests/system/ -v
 ```

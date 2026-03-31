@@ -338,22 +338,12 @@ history_panel_wrap
 
 ### Body — Row 1 widgets
 
-#### Enable pill toggle
+#### Enable dropdown (4.0.0b)
 
-- **Var:** `self.ts_enabled` (BooleanVar)
-- **On "OFF":** Preview canvas removes timestamp. Summary shows `"OFF"`.
-
-#### Outside canvas pill toggle
-
-- **Var:** `self.ts_outside_canvas` (BooleanVar)
-- **On "ON":** Screenshot image height increases (strip added above/below). Preview reflects this.
-- **On "OFF":** Timestamp overlaid on image at chosen position.
-
-#### Position OptionMenu
-
-- **Var:** `self.ts_position` (StringVar)
-- **Values:** `["bottom-right", "bottom-left", "top-right", "top-left"]`
-- **Visible always** (no hide/show by mode)
+- **Var:** `self.ts_enable` (StringVar) + `self.ts_enabled`, `self.ts_outside_canvas` (BooleanVar)
+- **Values:** `["Off", "Outside"]`
+- **On "Off":** Timestamp disabled. Controls disabled.
+- **On "Outside":** Timestamp strip at bottom of image.
 
 ### Body — Row 2 widgets
 
@@ -489,9 +479,9 @@ finally:
 | `wm_position` | StringVar | `"bottom-left"` | WM placement |
 | `wm_opacity` | IntVar | `70` | WM opacity 0–100 |
 | `wm_scale` | IntVar | `20` | WM scale % of width |
-| `ts_enabled` | BooleanVar | `True` | TS on/off |
+| `ts_enabled` | BooleanVar | `True` | TS on/off (internal) |
+| `ts_enable` | StringVar | `"Outside"` | TS dropdown display |
 | `ts_format` | StringVar | `"%d/%m/%Y  %H:%M:%S"` | strftime format |
-| `ts_position` | StringVar | `"bottom-right"` | TS placement |
 | `ts_font_size` | IntVar | `22` | Font size px |
 | `ts_color` | StringVar | `"#FFFFFF"` | TS text color |
 | `ts_bg_color` | StringVar | `"#000000"` | TS background color |

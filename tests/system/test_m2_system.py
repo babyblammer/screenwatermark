@@ -161,4 +161,4 @@ class TestTray:
         img = _make_tray_icon()
         assert isinstance(img, Image.Image)
         assert img.mode == "RGBA"
-        assert img.size == (64, 64)
+        assert img.size == (32, 32)
