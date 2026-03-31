@@ -4,7 +4,6 @@ A screenshot utility that applies watermarks and timestamps to captured images.
 Supports fullscreen and region capture, system tray operation, and persistent history.
 
 **Current version:** v4.1.0a
-**Stable release:** v3.9.1f HF1
 
 ---
 
@@ -45,7 +44,7 @@ run_tests_M2.bat
 run_tests_GC.bat
 ```
 
-See `docs/Programmer_Test_Setup_Guide.md` for full instructions.
+See [Test Setup](docs/Programmer_Test_Setup_Guide.md) for full instructions.
 
 ---
 
@@ -53,16 +52,10 @@ See `docs/Programmer_Test_Setup_Guide.md` for full instructions.
 
 | Doc | Purpose |
 |---|---|
-| [Modular Architecture](docs/Modular_Architecture_Proposal_v8.0.md) | Why modular first, structure rationale |
-| `docs/Migration_Plan_v8.0.md` | Phase plan M1–M3 + P0–P7 + GC |
-| `docs/Implementation_Guideline_v8.0.md` | Step-by-step code for programmer |
-| `docs/UI_UX_Spec_v8.0.md` | Widget specs, palette, layout |
-| `docs/Behavior_Addendum_v8.0.md` | Accordion/scroll/history exact behavior + stubs |
-| `docs/QA_TestCase_v8.0.md` | All 106 test cases |
-| `docs/Automation_Test_Strategy_v8.0.md` | Coverage map, test architecture |
-| `docs/Manual_QA_Tracker_v8.0.md` | 26 manual-only cases |
-| `docs/Programmer_Test_Setup_Guide.md` | Where to place files, when to run which script |
-| `mockup/mockup_SWPro_v8.0_R2.html` | Interactive UI mockup |
+| [Testcase QA](docs/QA_TestCase_v8.0.md) | All 106 test cases |
+| [Automation Test](docs/Automation_Test_Strategy_v8.0.md) | Coverage map, test architecture |
+| [Manual QA Tracker](docs/Manual_QA_Tracker_v8.0.md) | 26 manual-only cases |
+| [Programmer Guide](docs/Programmer_Test_Setup_Guide.md) | Where to place files, when to run which script |
 
 ---
 
