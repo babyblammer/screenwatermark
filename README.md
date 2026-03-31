@@ -3,7 +3,17 @@
 A screenshot utility that applies watermarks and timestamps to captured images.
 Supports fullscreen and region capture, system tray operation, and persistent history.
 
-**Current version:** v4.1.0a
+**Stable Version:** v4.1.0a
+
+---
+
+This app is the result of a Vibe Coding project, 98% of whose codebase was written by AI. It originated when the creator—who works as a graphic designer—needed an app capable of adding a watermark to screenshots of their work.
+
+The app project was completed in approximately four weeks, starting from the initial conceptualisation, workflow planning, ideation and requirements research.
+
+The codebase was developed by Claude and Big Pickle (Opencode).
+
+Run and tested on Windows 10
 
 ---
 
