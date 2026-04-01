@@ -41,6 +41,48 @@ import i18n
 from i18n import t
 
 
+def _to_internal_pos(display_val: str) -> str:
+    """Convert display position value to internal value."""
+    mapping = {
+        "bottom-left": "bottom-left", "bottom-right": "bottom-right",
+        "top-left": "top-left", "top-right": "top-right", "center": "center",
+        t("pos_bottom_left"): "bottom-left", t("pos_bottom_right"): "bottom-right",
+        t("pos_top_left"): "top-left", t("pos_top_right"): "top-right", t("pos_center"): "center",
+        "Bottom-Left": "bottom-left", "Bottom-Right": "bottom-right",
+        "Top-Left": "top-left", "Top-Right": "top-right", "Center": "center",
+        "Kiri-Bawah": "bottom-left", "Kanan-Bawah": "bottom-right",
+        "Kiri-Atas": "top-left", "Kanan-Atas": "top-right", "Tengah": "center",
+        "kiri-bawah": "bottom-left", "kanan-bawah": "bottom-right",
+        "kiri-atas": "top-left", "kanan-atas": "top-right", "tengah": "center",
+    }
+    return mapping.get(display_val, "bottom-left")
+
+
+def _to_internal_mode(display_val: str) -> str:
+    """Convert display mode value to internal value."""
+    mapping = {
+        "off": "off", "normal": "normal", "full": "full", "pattern": "pattern",
+        t("wm_off_mode"): "off", t("wm_normal_mode"): "normal",
+        t("wm_full_mode"): "full", t("wm_pattern_mode"): "pattern",
+        "Off": "off", "Normal": "normal", "Full Screen": "full", "Pattern": "pattern",
+        "Nonaktif": "off", "Normal": "normal", "Layar Penuh": "full", "Pola": "pattern",
+        "nonaktif": "off", "normal": "normal", "layar penuh": "full", "pola": "pattern",
+    }
+    return mapping.get(display_val, "normal")
+
+
+def _to_internal_ts_enable(display_val: str) -> str:
+    """Convert display ts_enable value to internal value."""
+    mapping = {
+        "off": "off", "outside": "outside",
+        t("ts_off_mode"): "off", t("ts_outside_mode"): "outside",
+        "Off": "off", "Outside": "outside",
+        "Nonaktif": "off", "Di luar": "outside",
+        "nonaktif": "off", "di luar": "outside",
+    }
+    return mapping.get(display_val, "off")
+
+
 def _show_toast(parent: "ctk.CTk", message: str, duration: int = 3000, color: tuple = None):
     """Show a temporary toast notification."""
     if color is None:
@@ -105,13 +147,13 @@ class ScreenWatermarkApp(ctk.CTk):
         # ── Tkinter vars ─────────────────────────────────────────────────────────
         self.watermark_path    = tk.StringVar(value=cfg["watermark_path"])
         self.wm_enabled        = tk.BooleanVar(value=bool(cfg.get("wm_enabled", True)))
-        self.wm_position       = tk.StringVar(value=cfg["wm_position"])
+        self.wm_position       = tk.StringVar(value=_to_internal_pos(cfg["wm_position"]))
         self.wm_opacity        = tk.IntVar(value=int(cfg["wm_opacity"]))
         self.wm_scale          = tk.IntVar(value=int(cfg["wm_scale"]))
         self.wm_pattern_gap    = tk.IntVar(value=int(cfg.get("wm_pattern_gap", 20)))
-        self.wm_mode           = tk.StringVar(value=cfg.get("wm_mode", "Normal"))
+        self.wm_mode           = tk.StringVar(value=_to_internal_mode(cfg.get("wm_mode", "normal")))
         self.ts_enabled        = tk.BooleanVar(value=bool(cfg["ts_enabled"]))
-        self.ts_enable         = tk.StringVar(value=cfg.get("ts_enable", "Outside"))
+        self.ts_enable         = tk.StringVar(value=_to_internal_ts_enable(cfg.get("ts_enable", "off")))
         self.ts_format         = tk.StringVar(value=cfg["ts_format"])
         self.ts_format_display = tk.StringVar(value="DD/MM/YYYY HH:MM:SS")
         self.ts_font_size      = tk.IntVar(value=int(cfg["ts_font_size"]))
@@ -419,7 +461,7 @@ class ScreenWatermarkApp(ctk.CTk):
         """Update WM indicator in header based on mode."""
         mode = self.wm_mode.get()
         has_file = bool(self.watermark_path.get())
-        if mode == "Off":
+        if mode == "off":
             self.wm_indicator.configure(text=t("wm_off"), text_color=MUTED)
         elif not has_file:
             self.wm_indicator.configure(text=t("wm_warn"), text_color=WARN)
@@ -445,6 +487,9 @@ class ScreenWatermarkApp(ctk.CTk):
     # ── Snapshot & autosave ───────────────────────────────────────────────────
     def _deferred_startup(self):
         def _load():
+            from core.wm_cache import get_cached_watermark
+            
+            # Load history
             done = threading.Event()
             result: list = []
             def _task():
@@ -453,9 +498,15 @@ class ScreenWatermarkApp(ctk.CTk):
             _history_io_q.put((_task, (), {}))
             done.wait(timeout=10)
             entries = result[0] if result else []
+            
+            # Preload watermark
+            wm_path = self._settings_snapshot.get("watermark_path", "")
+            if wm_path and os.path.exists(wm_path):
+                get_cached_watermark(wm_path)
+            
             if not self._is_quitting:
                 self.after(0, lambda: self._apply_loaded_history(entries))
-        threading.Thread(target=_load, daemon=True, name="ScreenWM-HistoryLoad").start()
+        threading.Thread(target=_load, daemon=True, name="ScreenWM-StartupLoad").start()
         self._register_all_hotkeys()
 
     def _apply_loaded_history(self, entries: list):
@@ -466,20 +517,14 @@ class ScreenWatermarkApp(ctk.CTk):
         self._render_history()
 
     def _refresh_snapshot(self):
-        wm_mode_val = self.wm_mode.get().lower()
-        if wm_mode_val == "full screen":
-            wm_mode_val = "full"
-        
-        wm_pos_val = self.wm_position.get().lower()
-        
         self._settings_snapshot = {
             "watermark_path":    self.watermark_path.get(),
             "wm_enabled":        self.wm_enabled.get(),
-            "wm_position":       wm_pos_val,
+            "wm_position":       self.wm_position.get(),
             "wm_opacity":        self.wm_opacity.get(),
             "wm_scale":          self.wm_scale.get(),
             "wm_pattern_gap":     self.wm_pattern_gap.get(),
-            "wm_mode":           wm_mode_val,
+            "wm_mode":           self.wm_mode.get(),
             "ts_enabled":        self.ts_enabled.get(),
             "ts_format":         self.ts_format.get(),
             "ts_font_size":      self.ts_font_size.get(),
@@ -1102,13 +1147,24 @@ class ScreenWatermarkApp(ctk.CTk):
         row1.grid_columnconfigure(3, weight=1)
         
         ctk.CTkLabel(row1, text=t("label_mode"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        mode_values = [t("wm_off_mode"), t("wm_normal_mode"), t("wm_full_mode"), t("wm_pattern_mode")]
+        
+        def _on_wm_mode_change(display_val: str):
+            self.wm_mode.set(_to_internal_mode(display_val))
+            self.wm_enabled.set(self.wm_mode.get() != "off")
+            invalidate_wm_cache()
+            self._refresh_wm_controls()
+            self._update_wm_indicator()
+            self._update_wm_summary()
+            self._refresh_live_preview()
+        
         self.wm_mode_menu = ctk.CTkOptionMenu(row1, 
-                                               values=[t("wm_off_mode"), t("wm_normal_mode"), t("wm_full_mode"), t("wm_pattern_mode")],
-                                               variable=self.wm_mode, font=(FONT, 13),
+                                               values=mode_values,
+                                               font=(FONT, 13),
                                                fg_color=BORDER, button_color=BORDER, button_hover_color=ACCENT,
                                                dropdown_fg_color=PANEL, text_color=TEXT,
                                                width=DROPDOWN_W, height=DROPDOWN_H,
-                                               command=self._on_wm_mode_change)
+                                               command=_on_wm_mode_change)
         self.wm_mode_menu.grid(row=0, column=1, sticky="w", padx=(0, 24))
         
         ctk.CTkLabel(row1, text=t("label_opacity"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
@@ -1129,13 +1185,20 @@ class ScreenWatermarkApp(ctk.CTk):
         row2.grid_columnconfigure(3, weight=1)
         
         ctk.CTkLabel(row2, text=t("label_position"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        
+        pos_values = [t("pos_bottom_left"), t("pos_bottom_right"), t("pos_top_left"), t("pos_top_right"), t("pos_center")]
+        
+        def _on_wm_position_change(display_val: str):
+            self.wm_position.set(_to_internal_pos(display_val))
+            self._update_wm_summary()
+        
         self.wm_position_menu = ctk.CTkOptionMenu(row2, 
-                                                  values=[t("pos_bottom_left"), t("pos_bottom_right"), t("pos_top_left"), t("pos_top_right"), t("pos_center")],
-                                                  variable=self.wm_position, font=(FONT, 13),
+                                                  values=pos_values,
+                                                  font=(FONT, 13),
                                                   fg_color=BORDER, button_color=BORDER, button_hover_color=ACCENT,
                                                   dropdown_fg_color=PANEL, text_color=TEXT,
                                                   width=DROPDOWN_W, height=DROPDOWN_H,
-                                                  command=lambda v: self._update_wm_summary())
+                                                  command=_on_wm_position_change)
         self.wm_position_menu.grid(row=0, column=1, sticky="w", padx=(0, 24))
         
         ctk.CTkLabel(row2, text=t("label_scale"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
@@ -1185,40 +1248,32 @@ class ScreenWatermarkApp(ctk.CTk):
         self._update_wm_summary()
     
     def _sync_wm_mode_var(self):
-        mode_map = {
+        internal_to_display = {
             "off": t("wm_off_mode"), "normal": t("wm_normal_mode"),
             "full": t("wm_full_mode"), "pattern": t("wm_pattern_mode"),
-            t("wm_off_mode"): t("wm_off_mode"), t("wm_normal_mode"): t("wm_normal_mode"),
-            t("wm_full_mode"): t("wm_full_mode"), t("wm_pattern_mode"): t("wm_pattern_mode"),
-            "Off": t("wm_off_mode"), "Normal": t("wm_normal_mode"),
-            "Full Screen": t("wm_full_mode"), "Pattern": t("wm_pattern_mode"),
         }
-        self.wm_mode.set(mode_map.get(self.wm_mode.get(), t("wm_normal_mode")))
-        self.wm_enabled.set(self.wm_mode.get() != t("wm_off_mode"))
+        self.wm_mode.set(_to_internal_mode(self.wm_mode.get()))
+        display_val = internal_to_display.get(self.wm_mode.get(), t("wm_normal_mode"))
+        self.wm_mode_menu.set(display_val)
+        self.wm_enabled.set(self.wm_mode.get() != "off")
     
     def _sync_wm_position_var(self):
-        pos_map = {
+        internal_to_display = {
             "bottom-left": t("pos_bottom_left"), "bottom-right": t("pos_bottom_right"),
             "top-left": t("pos_top_left"), "top-right": t("pos_top_right"), "center": t("pos_center"),
-            t("pos_bottom_left"): t("pos_bottom_left"), t("pos_bottom_right"): t("pos_bottom_right"),
-            t("pos_top_left"): t("pos_top_left"), t("pos_top_right"): t("pos_top_right"), t("pos_center"): t("pos_center"),
-            "Bottom-Left": t("pos_bottom_left"), "Bottom-Right": t("pos_bottom_right"),
-            "Top-Left": t("pos_top_left"), "Top-Right": t("pos_top_right"), "Center": t("pos_center"),
         }
-        self.wm_position.set(pos_map.get(self.wm_position.get(), t("pos_bottom_left")))
+        self.wm_position.set(_to_internal_pos(self.wm_position.get()))
+        display_val = internal_to_display.get(self.wm_position.get(), t("pos_bottom_left"))
+        self.wm_position_menu.set(display_val)
     
 
 
     def _refresh_wm_controls(self):
         mode = self.wm_mode.get()
-        wm_off_mode = t("wm_off_mode")
-        wm_normal_mode = t("wm_normal_mode")
-        wm_full_mode = t("wm_full_mode")
-        wm_pattern_mode = t("wm_pattern_mode")
-        is_off = (mode == wm_off_mode or mode == "Off")
-        is_normal = (mode == wm_normal_mode or mode == "Normal")
-        is_pattern = (mode == wm_pattern_mode or mode == "Pattern")
-        is_fullscreen = (mode == wm_full_mode or mode == "Full Screen")
+        is_off = (mode == "off")
+        is_normal = (mode == "normal")
+        is_pattern = (mode == "pattern")
+        is_fullscreen = (mode == "full")
         
         if is_off:
             ctrl_state = "disabled"
@@ -1273,28 +1328,27 @@ class ScreenWatermarkApp(ctk.CTk):
             return
         
         mode = self.wm_mode.get()
-        wm_off_mode = t("wm_off_mode")
-        wm_normal_mode = t("wm_normal_mode")
-        wm_full_mode = t("wm_full_mode")
-        wm_pattern_mode = t("wm_pattern_mode")
+        internal_to_display = {
+            "off": t("wm_off_mode"), "normal": t("wm_normal_mode"),
+            "full": t("wm_full_mode"), "pattern": t("wm_pattern_mode"),
+        }
+        pos_to_display = {
+            "bottom-left": t("pos_bottom_left"), "bottom-right": t("pos_bottom_right"),
+            "top-left": t("pos_top_left"), "top-right": t("pos_top_right"), "center": t("pos_center"),
+        }
         
-        mode_display = {
-            wm_off_mode: wm_off_mode, wm_normal_mode: wm_normal_mode,
-            wm_full_mode: wm_full_mode, wm_pattern_mode: wm_pattern_mode,
-            "Off": wm_off_mode, "Normal": wm_normal_mode,
-            "Full Screen": wm_full_mode, "Pattern": wm_pattern_mode,
-        }.get(mode, mode)
+        mode_display = internal_to_display.get(mode, t("wm_normal_mode"))
         op = f"{self.wm_opacity.get()}%"
         
-        if mode == wm_off_mode or mode == "Off":
-            text = wm_off_mode
+        if mode == "off":
+            text = t("wm_off_mode")
             self.wm_summary.configure(text=text, text_color=ACCENT2)
-        elif mode == wm_normal_mode or mode == "Normal":
-            pos_display = self.wm_position.get()
+        elif mode == "normal":
+            pos_display = pos_to_display.get(self.wm_position.get(), t("pos_bottom_left"))
             sc = f"{self.wm_scale.get()}%"
             text = f"{mode_display} · {pos_display} · {op} · {sc}"
             self.wm_summary.configure(text=text, text_color=TEXT)
-        elif mode == wm_pattern_mode or mode == "Pattern":
+        elif mode == "pattern":
             sc = f"{self.wm_scale.get()}%"
             gap = f"{self.wm_pattern_gap.get()}px"
             text = f"{mode_display} · {op} · {sc} · {gap}"
@@ -1309,7 +1363,7 @@ class ScreenWatermarkApp(ctk.CTk):
         
         path = self.watermark_path.get()
         mode = self.wm_mode.get()
-        is_normal = (mode == "Normal")
+        is_normal = (mode == "normal")
         
         if not path:
             text = t("select_file")
@@ -1348,13 +1402,28 @@ class ScreenWatermarkApp(ctk.CTk):
         row1.grid_columnconfigure(3, weight=1)
         
         ctk.CTkLabel(row1, text=t("label_enable"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ts_enable_values = [t("ts_off_mode"), t("ts_outside_mode")]
+        
+        def _on_ts_enable_change_wrapper(value):
+            internal = _to_internal_ts_enable(value)
+            self.ts_enable.set(internal)
+            if internal == "off":
+                self.ts_enabled.set(False)
+                self.ts_outside_canvas.set(False)
+            else:
+                self.ts_enabled.set(True)
+                self.ts_outside_canvas.set(True)
+            self._on_setting_changed()
+            self._refresh_ts_controls()
+            self._update_ts_summary()
+        
         self.ts_enable_menu = ctk.CTkOptionMenu(row1, 
-                                                values=[t("ts_off_mode"), t("ts_outside_mode")],
-                                                variable=self.ts_enable, font=(FONT, 13),
+                                                values=ts_enable_values,
+                                                font=(FONT, 13),
                                                 fg_color=BORDER, button_color=BORDER, button_hover_color=ACCENT,
                                                 dropdown_fg_color=PANEL, text_color=TEXT,
                                                 width=DROPDOWN_W, height=DROPDOWN_H,
-                                                command=self._on_ts_enable_change)
+                                                command=_on_ts_enable_change_wrapper)
         self.ts_enable_menu.grid(row=0, column=1, sticky="w", padx=(0, 24))
         
         ctk.CTkLabel(row1, text=t("label_format"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
@@ -1401,10 +1470,16 @@ class ScreenWatermarkApp(ctk.CTk):
         self._sync_ts_format_display()
 
     def _sync_ts_enable_var(self):
+        internal_to_display = {
+            "off": t("ts_off_mode"),
+            "outside": t("ts_outside_mode"),
+        }
         if not self.ts_enabled.get():
-            self.ts_enable.set("Off")
+            self.ts_enable.set("off")
         else:
-            self.ts_enable.set("Outside")
+            self.ts_enable.set("outside")
+        display = internal_to_display.get(self.ts_enable.get(), t("ts_off_mode"))
+        self.ts_enable_menu.set(display)
 
     def _sync_ts_format_display(self):
         format_to_display = {
@@ -1422,25 +1497,9 @@ class ScreenWatermarkApp(ctk.CTk):
         }
         self.ts_format.set(display_to_format.get(display_value, "%d/%m/%Y  %H:%M:%S"))
 
-    def _on_ts_enable_change(self, value):
-        self.ts_enable.set(value)
-        ts_off_mode = t("ts_off_mode")
-        
-        if value == ts_off_mode or value == "Off":
-            self.ts_enabled.set(False)
-            self.ts_outside_canvas.set(False)
-        else:
-            self.ts_enabled.set(True)
-            self.ts_outside_canvas.set(True)
-        
-        self._on_setting_changed()
-        self._refresh_ts_controls()
-        self._update_ts_summary()
-
     def _refresh_ts_controls(self):
         mode = self.ts_enable.get()
-        ts_off_mode = t("ts_off_mode")
-        is_disabled = (mode == ts_off_mode or mode == "Off")
+        is_disabled = (mode == "off")
         
         if is_disabled:
             ctrl_state = "disabled"
@@ -1460,10 +1519,10 @@ class ScreenWatermarkApp(ctk.CTk):
             return
         
         mode = self.ts_enable.get()
-        ts_off_mode = t("ts_off_mode")
+        ts_off_display = t("ts_off_mode")
         
-        if mode == ts_off_mode or mode == "Off":
-            self.ts_summary.configure(text=ts_off_mode, text_color=ACCENT2)
+        if mode == "off":
+            self.ts_summary.configure(text=ts_off_display, text_color=ACCENT2)
         else:
             size = f"{self.ts_font_size.get()}px"
             col = self.ts_color.get().upper()
@@ -1474,24 +1533,23 @@ class ScreenWatermarkApp(ctk.CTk):
         self._update_wm_summary()
         self._refresh_live_preview()
 
-    def _on_wm_mode_change(self, mode: str):
-        self.wm_mode.set(mode)
-        self.wm_enabled.set(mode != t("wm_off_mode") and mode != "Off")
-        invalidate_wm_cache()
-        self._refresh_wm_controls()
-        self._update_wm_indicator()
-        self._update_wm_summary()
-        self._refresh_live_preview()
-
     def _on_wm_path_changed(self):
         invalidate_wm_cache()
         self._update_wm_summary()
         self._refresh_live_preview()
 
+    MAX_WM_SIZE = 3 * 1024 * 1024  # 3MB
+
     def _pick_watermark(self):
         from tkinter import filedialog
-        path = filedialog.askopenfilename(title=t("select_area"), filetypes=[("Gambar", "*.png *.jpg *.jpeg *.gif *.bmp *.webp"), ("Semua", "*.*")])
+        path = filedialog.askopenfilename(
+            title=t("select_watermark"),
+            filetypes=[(t("image_files"), "*.png *.jpg *.jpeg *.gif *.bmp *.webp")]
+        )
         if path:
+            if os.path.getsize(path) > self.MAX_WM_SIZE:
+                _show_toast(self, t("wm_file_too_large"), duration=4000, color=WARN)
+                return
             self.watermark_path.set(path)
             self._check_watermark_loading()
 

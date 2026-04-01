@@ -153,6 +153,11 @@ _STRINGS = {
         "wm_load_failed": "Failed to load watermark",
         "wm_format_unsupported": "Unsupported watermark format",
         "wm_file_corrupt": "Watermark file is corrupted or invalid",
+        "wm_file_too_large": "Watermark file exceeds 3MB limit",
+
+        # File Dialog
+        "select_watermark": "Select Watermark File",
+        "image_files": "Image Files",
 
         # Region Selector
         "area_not_selected": "Area not selected",
@@ -341,6 +346,11 @@ _STRINGS = {
         "wm_load_failed": "Gagal memuat watermark",
         "wm_format_unsupported": "Format watermark tidak didukung",
         "wm_file_corrupt": "Berkas watermark rusak atau tidak valid",
+        "wm_file_too_large": "Berkas watermark melebihi batas 3MB",
+
+        # File Dialog
+        "select_watermark": "Pilih Berkas Watermark",
+        "image_files": "Berkas Gambar",
 
         # Region Selector
         "area_not_selected": "Area belum dipilih",
