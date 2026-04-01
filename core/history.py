@@ -9,6 +9,7 @@ import json
 import queue as _q
 import threading
 import uuid
+import warnings
 from datetime import datetime
 from pathlib import Path
 from PIL import Image
@@ -16,6 +17,15 @@ from PIL import Image
 from core.constants import HISTORY_FILE, HISTORY_MAX
 
 _history_io_q: "_q.Queue" = _q.Queue()
+
+def _safe_image_open(source: "_io.BytesIO") -> "Image.Image | None":
+    """Open image, suppress DecompressionBombWarning for corrupted/ oversized data."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=Image.DecompressionBombWarning)
+        try:
+            return Image.open(source)
+        except Exception:
+            return None
 
 def _history_io_worker():
     """Worker tunggal: proses task I/O history secara serial (FIFO)."""
@@ -86,10 +96,13 @@ def load_history() -> list:
             raw_full = _b64.b64decode(e["full_b64"])
             if e.get("full_fmt", "png") == "jpeg":
                 try:
-                    _img = Image.open(_io.BytesIO(raw_full))
-                    _png_buf = _io.BytesIO()
-                    _img.save(_png_buf, "PNG", optimize=True, compress_level=6)
-                    full_bytes = _png_buf.getvalue()
+                    _img = _safe_image_open(_io.BytesIO(raw_full))
+                    if _img:
+                        _png_buf = _io.BytesIO()
+                        _img.save(_png_buf, "PNG", optimize=True, compress_level=6)
+                        full_bytes = _png_buf.getvalue()
+                    else:
+                        full_bytes = raw_full
                 except Exception:
                     full_bytes = raw_full
             else:

@@ -5,11 +5,14 @@ Extracted from Screen Watermark_3.9.1f_HF1.py
 
 import io
 import tkinter as tk
+import warnings
 from tkinter import messagebox
 from PIL import Image, ImageTk
 
 from core.constants import PANEL, CARD, ACCENT, ACCENT2, SUCCESS, TEXT, MUTED, BORDER
 from core.clipboard import copy_image_to_clipboard
+from i18n import t
+
 class HistoryPopup(tk.Toplevel):
     """
     Floating window berisi 5 thumbnail riwayat.
@@ -22,7 +25,7 @@ class HistoryPopup(tk.Toplevel):
         self.app  = master
         self._tks = []
         self._destroyed = False
-        self.title("Riwayat Screenshot")
+        self.title(t("history_title"))
         self.configure(bg=PANEL)
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self._safe_destroy)
@@ -65,7 +68,7 @@ class HistoryPopup(tk.Toplevel):
 
     def _build(self):
         hdr = tk.Frame(self, bg=PANEL); hdr.pack(fill="x", padx=10, pady=(10,6))
-        tk.Label(hdr, text="\U0001f5bc  Riwayat Screenshot",
+        tk.Label(hdr, text=f"\U0001f5bc  {t('history_title')}",
                  font=("Segoe UI", 11, "bold"), bg=PANEL, fg=ACCENT
                  ).pack(side="left")
         tk.Button(hdr, text="\u2715", bg=PANEL, fg=MUTED, bd=0,
@@ -77,7 +80,7 @@ class HistoryPopup(tk.Toplevel):
             history = list(self.app._history)
 
         if not history:
-            tk.Label(self, text="Belum ada screenshot.",
+            tk.Label(self, text=t("history_no_items"),
                      bg=PANEL, fg=MUTED, font=("Segoe UI", 10)
                      ).pack(pady=24, padx=24)
             return
@@ -89,7 +92,9 @@ class HistoryPopup(tk.Toplevel):
             col.grid(row=0, column=i, padx=4, pady=4)
 
             try:
-                thumb = Image.open(io.BytesIO(entry["thumb_bytes"]))
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=Image.DecompressionBombWarning)
+                    thumb = Image.open(io.BytesIO(entry["thumb_bytes"]))
                 thumb.thumbnail((self.THUMB_W, self.THUMB_H), Image.LANCZOS)
                 bg_img = Image.new("RGB", (self.THUMB_W, self.THUMB_H), (10,10,18))
                 bg_img.paste(thumb,
@@ -112,7 +117,7 @@ class HistoryPopup(tk.Toplevel):
             for child in list(col.winfo_children()) + [col]:
                 child.bind("<Button-1>", _click)
 
-        tk.Label(self, text="Klik thumbnail untuk menyalin ke clipboard",
+        tk.Label(self, text=t("history_copy_hint"),
                  bg=PANEL, fg=TEXT, font=("Segoe UI", 10)
                  ).pack(pady=(2,8))
 
@@ -144,7 +149,7 @@ class HistoryPopup(tk.Toplevel):
                     if not self._destroyed:
                         if col.winfo_exists(): col.configure(bg=orig)
                 self.after(400, _restore_and_close)
-            self.app.status_var.set("Riwayat disalin ke clipboard!")
+            self.app.status_var.set(t("history_copied"))
             # [m5-fix] Cek btn_copy masih exists sebelum config
             try:
                 self.app.btn_copy.config(state="normal", bg=SUCCESS)

@@ -5,12 +5,22 @@ Extracted from Screen Watermark_3.9.1f_HF1.py
 
 import os
 import threading
+import warnings
 from PIL import Image
 
 _wm_cache: dict        = {}
 _wm_resize_cache: dict = {}
 _wm_load_failed: set   = set()
 _wm_cache_lock         = threading.Lock()
+
+def _safe_image_open(path: str) -> "Image.Image | None":
+    """Open watermark image, suppress DecompressionBombWarning for corrupted files."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=Image.DecompressionBombWarning)
+        try:
+            return Image.open(path).convert("RGBA")
+        except Exception:
+            return None
 
 def get_cached_watermark(path: str) -> "Image.Image | None":
     """Return cached RGBA watermark (copy), reload jika path berubah.
@@ -26,12 +36,12 @@ def get_cached_watermark(path: str) -> "Image.Image | None":
             return None
         _wm_cache.clear()
         _wm_resize_cache.clear()
-        try:
-            _wm_cache[path] = Image.open(path).convert("RGBA")
-        except Exception:
-            _wm_load_failed.add(path)
-            return None
-        return _wm_cache[path].copy()
+        _img = _safe_image_open(path)
+        if _img:
+            _wm_cache[path] = _img
+            return _wm_cache[path].copy()
+        _wm_load_failed.add(path)
+        return None
 
 def invalidate_wm_cache():
     """[P2] Invalidasi original cache DAN resize cache saat path berubah."""
@@ -54,9 +64,10 @@ def _get_wm_resized(path: str, new_w: int, new_h: int) -> "Image.Image | None":
                 return None
             if not os.path.exists(path):
                 return None
-            try:
-                _wm_cache[path] = Image.open(path).convert("RGBA")
-            except Exception:
+            _img = _safe_image_open(path)
+            if _img:
+                _wm_cache[path] = _img
+            else:
                 _wm_load_failed.add(path)
                 return None
         orig = _wm_cache[path]

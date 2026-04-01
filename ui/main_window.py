@@ -304,7 +304,7 @@ class ScreenWatermarkApp(ctk.CTk):
         ctk.CTkLabel(hist_topbar, text=t("history_tab_hint"),
                      font=(FONT_MONO, 10), text_color=MUTED, fg_color="transparent").pack(side="left")
         
-        ctk.CTkButton(hist_topbar, text=t("Clear History"), font=(FONT, 13),
+        ctk.CTkButton(hist_topbar, text=t("clear_history"), font=(FONT, 13),
                       fg_color=CARD, hover_color=BORDER, text_color=MUTED,
                       corner_radius=6, border_width=1, border_color=BORDER,
                       width=90, height=28,
@@ -390,11 +390,11 @@ class ScreenWatermarkApp(ctk.CTk):
         mode = self.wm_mode.get()
         has_file = bool(self.watermark_path.get())
         if mode == "Off":
-            self.wm_indicator.configure(text="OFF", text_color=MUTED)
+            self.wm_indicator.configure(text=t("wm_off"), text_color=MUTED)
         elif not has_file:
-            self.wm_indicator.configure(text="WM ⚠", text_color=WARN)
+            self.wm_indicator.configure(text=t("wm_warn"), text_color=WARN)
         else:
-            self.wm_indicator.configure(text="ACTIVE", text_color=SUCCESS)
+            self.wm_indicator.configure(text=t("wm_active"), text_color=SUCCESS)
 
     def _go_history_tab(self):
         """Switch to history tab."""
@@ -430,7 +430,7 @@ class ScreenWatermarkApp(ctk.CTk):
         if wm_mode_val == "full screen":
             wm_mode_val = "full"
         
-        wm_pos_val = self.wm_position.get().lower().replace("-", "")
+        wm_pos_val = self.wm_position.get().lower()
         
         self._settings_snapshot = {
             "watermark_path":    self.watermark_path.get(),
@@ -487,7 +487,7 @@ class ScreenWatermarkApp(ctk.CTk):
                 d.line([(0,y),(pw,y)], fill=(42,42,62), width=1)
             try:
                 fnt = load_font(8)
-                d.text((pw//2 - 36, ph//2 - 6), "AREA SCREENSHOT", font=fnt, fill=(60,60,92))
+                d.text((pw//2 - 36, ph//2 - 6), t("area_screenshot"), font=fnt, fill=(60,60,92))
             except: pass
 
             wm_path = cfg.get("watermark_path","")
@@ -495,12 +495,12 @@ class ScreenWatermarkApp(ctk.CTk):
             if wm_on and not wm_path:
                 try:
                     fnt2 = load_font(7)
-                    d.text((4, 4), f"[ {t('watermark')}: {t('no_file')} ]", font=fnt2, fill=(120,80,40))
+                    d.text((4, 4), t("wm_file_not_set"), font=fnt2, fill=(120,80,40))
                 except: pass
             elif not wm_on:
                 try:
                     fnt2 = load_font(7)
-                    d.text((4, 4), f"[ {t('watermark')}: {t('off')} ]", font=fnt2, fill=(100,100,100))
+                    d.text((4, 4), t("wm_disabled"), font=fnt2, fill=(100,100,100))
                 except: pass
 
             pcfg = cfg.copy()
@@ -919,7 +919,7 @@ class ScreenWatermarkApp(ctk.CTk):
     def _clear_all_history(self):
         if not self._history: return
         from tkinter import messagebox
-        if messagebox.askyesno("Konfirmasi", t("clear_history_confirm")):
+        if messagebox.askyesno(t("confirm"), t("clear_history_confirm")):
             with self._history_lock:
                 self._history.clear()
             _enqueue_save_history(self._history)
@@ -940,7 +940,7 @@ class ScreenWatermarkApp(ctk.CTk):
             self.btn_clear_history.configure(state="normal" if entries else "disabled")
 
         if not entries:
-            ctk.CTkLabel(self.history_scroll, text=t("History Empty"), font=(FONT, 13), text_color=MUTED).pack(pady=40)
+            ctk.CTkLabel(self.history_scroll, text=t("history_empty"), font=(FONT, 13), text_color=MUTED).pack(pady=40)
             return
 
         for idx, entry in enumerate(reversed(entries)):
@@ -969,10 +969,10 @@ class ScreenWatermarkApp(ctk.CTk):
             btn_row = ctk.CTkFrame(info, fg_color="transparent")
             btn_row.pack(anchor="w", pady=(6, 0))
             
-            ctk.CTkButton(btn_row, text="Salin", font=(FONT, 13), fg_color=ACCENT, hover_color="#5a52e0",
+            ctk.CTkButton(btn_row, text=t("copy_button"), font=(FONT, 13), fg_color=ACCENT, hover_color="#5a52e0",
                           text_color="white", corner_radius=6, width=60, height=28,
                           command=lambda e=entry: self._load_from_history(e)).pack(side="left")
-            ctk.CTkButton(btn_row, text="X", font=(FONT, 13), fg_color=CARD, hover_color=BORDER,
+            ctk.CTkButton(btn_row, text=t("delete_button"), font=(FONT, 13), fg_color=CARD, hover_color=BORDER,
                           text_color=MUTED, corner_radius=6, width=28, height=28, border_width=1, border_color=BORDER,
                           command=lambda e=entry: self._delete_history_entry(e)).pack(side="left", padx=(4, 0))
 
@@ -1044,7 +1044,7 @@ class ScreenWatermarkApp(ctk.CTk):
         title_row = ctk.CTkFrame(self.wm_frame, fg_color="transparent")
         title_row.pack(fill="x", padx=12, pady=(8, 4))
         
-        ctk.CTkLabel(title_row, text="💧 Watermark", font=(FONT, 14, "bold"), text_color=TEXT).pack(side="left")
+        ctk.CTkLabel(title_row, text=f"💧 {t('card_watermark')}", font=(FONT, 14, "bold"), text_color=TEXT).pack(side="left")
         
         self.wm_summary = ctk.CTkLabel(title_row, text="", font=(FONT, 11), text_color=MUTED, anchor="e")
         self.wm_summary.pack(side="right", fill="x", expand=True, padx=(20, 0))
@@ -1059,8 +1059,9 @@ class ScreenWatermarkApp(ctk.CTk):
         row1.grid_columnconfigure(2, weight=0, minsize=70)
         row1.grid_columnconfigure(3, weight=1)
         
-        ctk.CTkLabel(row1, text="Mode:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
-        self.wm_mode_menu = ctk.CTkOptionMenu(row1, values=["Off", "Normal", "Full Screen", "Pattern"],
+        ctk.CTkLabel(row1, text=t("label_mode"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        self.wm_mode_menu = ctk.CTkOptionMenu(row1, 
+                                               values=[t("wm_off_mode"), t("wm_normal_mode"), t("wm_full_mode"), t("wm_pattern_mode")],
                                                variable=self.wm_mode, font=(FONT, 13),
                                                fg_color=BORDER, button_color=BORDER, button_hover_color=ACCENT,
                                                dropdown_fg_color=PANEL, text_color=TEXT,
@@ -1068,7 +1069,7 @@ class ScreenWatermarkApp(ctk.CTk):
                                                command=self._on_wm_mode_change)
         self.wm_mode_menu.grid(row=0, column=1, sticky="w", padx=(0, 24))
         
-        ctk.CTkLabel(row1, text="Opacity:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
+        ctk.CTkLabel(row1, text=t("label_opacity"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
         opacity_slider_frame = ctk.CTkFrame(row1, fg_color="transparent")
         opacity_slider_frame.grid(row=0, column=3, sticky="w")
         self.wm_opacity_slider = ctk.CTkSlider(opacity_slider_frame, from_=10, to=100, variable=self.wm_opacity,
@@ -1085,8 +1086,9 @@ class ScreenWatermarkApp(ctk.CTk):
         row2.grid_columnconfigure(2, weight=0, minsize=70)
         row2.grid_columnconfigure(3, weight=1)
         
-        ctk.CTkLabel(row2, text="Position:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
-        self.wm_position_menu = ctk.CTkOptionMenu(row2, values=["Bottom-Left", "Bottom-Right", "Top-Left", "Top-Right", "Center"],
+        ctk.CTkLabel(row2, text=t("label_position"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        self.wm_position_menu = ctk.CTkOptionMenu(row2, 
+                                                  values=[t("pos_bottom_left"), t("pos_bottom_right"), t("pos_top_left"), t("pos_top_right"), t("pos_center")],
                                                   variable=self.wm_position, font=(FONT, 13),
                                                   fg_color=BORDER, button_color=BORDER, button_hover_color=ACCENT,
                                                   dropdown_fg_color=PANEL, text_color=TEXT,
@@ -1094,7 +1096,7 @@ class ScreenWatermarkApp(ctk.CTk):
                                                   command=lambda v: self._update_wm_summary())
         self.wm_position_menu.grid(row=0, column=1, sticky="w", padx=(0, 24))
         
-        ctk.CTkLabel(row2, text="Scale:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
+        ctk.CTkLabel(row2, text=t("label_scale"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
         scale_slider_frame = ctk.CTkFrame(row2, fg_color="transparent")
         scale_slider_frame.grid(row=0, column=3, sticky="w")
         self.wm_scale_slider = ctk.CTkSlider(scale_slider_frame, from_=5, to=60, variable=self.wm_scale,
@@ -1111,7 +1113,7 @@ class ScreenWatermarkApp(ctk.CTk):
         row3.grid_columnconfigure(2, weight=0, minsize=70)
         row3.grid_columnconfigure(3, weight=1)
         
-        ctk.CTkLabel(row3, text="Path:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ctk.CTkLabel(row3, text=t("label_path"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
         path_frame = ctk.CTkFrame(row3, fg_color=BORDER, corner_radius=4, border_width=0)
         path_frame.pack_propagate(False)
         path_frame.configure(width=DROPDOWN_W, height=DROPDOWN_H)
@@ -1121,7 +1123,7 @@ class ScreenWatermarkApp(ctk.CTk):
         self.wm_path_lbl.pack(fill="both", expand=True)
         self.wm_path_lbl.bind("<Button-1>", lambda e: self._pick_watermark())
         
-        ctk.CTkLabel(row3, text="Pattern Gap:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
+        ctk.CTkLabel(row3, text=t("label_pattern_gap"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
         gap_slider_frame = ctk.CTkFrame(row3, fg_color="transparent")
         gap_slider_frame.grid(row=0, column=3, sticky="w")
         self.wm_gap_slider = ctk.CTkSlider(gap_slider_frame, from_=5, to=100, variable=self.wm_pattern_gap,
@@ -1141,25 +1143,40 @@ class ScreenWatermarkApp(ctk.CTk):
         self._update_wm_summary()
     
     def _sync_wm_mode_var(self):
-        mode_map = {"off": "Off", "normal": "Normal", "full": "Full Screen", "pattern": "Pattern"}
-        self.wm_mode.set(mode_map.get(self.wm_mode.get(), "Normal"))
-        self.wm_enabled.set(self.wm_mode.get() != "Off")
+        mode_map = {
+            "off": t("wm_off_mode"), "normal": t("wm_normal_mode"),
+            "full": t("wm_full_mode"), "pattern": t("wm_pattern_mode"),
+            t("wm_off_mode"): t("wm_off_mode"), t("wm_normal_mode"): t("wm_normal_mode"),
+            t("wm_full_mode"): t("wm_full_mode"), t("wm_pattern_mode"): t("wm_pattern_mode"),
+            "Off": t("wm_off_mode"), "Normal": t("wm_normal_mode"),
+            "Full Screen": t("wm_full_mode"), "Pattern": t("wm_pattern_mode"),
+        }
+        self.wm_mode.set(mode_map.get(self.wm_mode.get(), t("wm_normal_mode")))
+        self.wm_enabled.set(self.wm_mode.get() != t("wm_off_mode"))
     
     def _sync_wm_position_var(self):
         pos_map = {
-            "bottom-left": "Bottom-Left", "bottom-right": "Bottom-Right",
-            "top-left": "Top-Left", "top-right": "Top-Right", "center": "Center"
+            "bottom-left": t("pos_bottom_left"), "bottom-right": t("pos_bottom_right"),
+            "top-left": t("pos_top_left"), "top-right": t("pos_top_right"), "center": t("pos_center"),
+            t("pos_bottom_left"): t("pos_bottom_left"), t("pos_bottom_right"): t("pos_bottom_right"),
+            t("pos_top_left"): t("pos_top_left"), t("pos_top_right"): t("pos_top_right"), t("pos_center"): t("pos_center"),
+            "Bottom-Left": t("pos_bottom_left"), "Bottom-Right": t("pos_bottom_right"),
+            "Top-Left": t("pos_top_left"), "Top-Right": t("pos_top_right"), "Center": t("pos_center"),
         }
-        self.wm_position.set(pos_map.get(self.wm_position.get(), "Bottom-Left"))
+        self.wm_position.set(pos_map.get(self.wm_position.get(), t("pos_bottom_left")))
     
 
 
     def _refresh_wm_controls(self):
         mode = self.wm_mode.get()
-        is_off = (mode == "Off")
-        is_normal = (mode == "Normal")
-        is_pattern = (mode == "Pattern")
-        is_fullscreen = (mode == "Full Screen")
+        wm_off_mode = t("wm_off_mode")
+        wm_normal_mode = t("wm_normal_mode")
+        wm_full_mode = t("wm_full_mode")
+        wm_pattern_mode = t("wm_pattern_mode")
+        is_off = (mode == wm_off_mode or mode == "Off")
+        is_normal = (mode == wm_normal_mode or mode == "Normal")
+        is_pattern = (mode == wm_pattern_mode or mode == "Pattern")
+        is_fullscreen = (mode == wm_full_mode or mode == "Full Screen")
         
         if is_off:
             ctrl_state = "disabled"
@@ -1214,18 +1231,28 @@ class ScreenWatermarkApp(ctk.CTk):
             return
         
         mode = self.wm_mode.get()
-        mode_display = {"Off": "Off", "Normal": "Normal", "Full Screen": "Full Screen", "Pattern": "Pattern"}.get(mode, mode)
+        wm_off_mode = t("wm_off_mode")
+        wm_normal_mode = t("wm_normal_mode")
+        wm_full_mode = t("wm_full_mode")
+        wm_pattern_mode = t("wm_pattern_mode")
+        
+        mode_display = {
+            wm_off_mode: wm_off_mode, wm_normal_mode: wm_normal_mode,
+            wm_full_mode: wm_full_mode, wm_pattern_mode: wm_pattern_mode,
+            "Off": wm_off_mode, "Normal": wm_normal_mode,
+            "Full Screen": wm_full_mode, "Pattern": wm_pattern_mode,
+        }.get(mode, mode)
         op = f"{self.wm_opacity.get()}%"
         
-        if mode == "Off":
-            text = "Off"
+        if mode == wm_off_mode or mode == "Off":
+            text = wm_off_mode
             self.wm_summary.configure(text=text, text_color=ACCENT2)
-        elif mode == "Normal":
+        elif mode == wm_normal_mode or mode == "Normal":
             pos_display = self.wm_position.get()
             sc = f"{self.wm_scale.get()}%"
             text = f"{mode_display} · {pos_display} · {op} · {sc}"
             self.wm_summary.configure(text=text, text_color=TEXT)
-        elif mode == "Pattern":
+        elif mode == wm_pattern_mode or mode == "Pattern":
             sc = f"{self.wm_scale.get()}%"
             gap = f"{self.wm_pattern_gap.get()}px"
             text = f"{mode_display} · {op} · {sc} · {gap}"
@@ -1263,7 +1290,7 @@ class ScreenWatermarkApp(ctk.CTk):
         title_row = ctk.CTkFrame(self.ts_frame, fg_color="transparent")
         title_row.pack(fill="x", padx=12, pady=(8, 4))
         
-        ctk.CTkLabel(title_row, text="🕐 Timestamp", font=(FONT, 14, "bold"), text_color=TEXT).pack(side="left")
+        ctk.CTkLabel(title_row, text=f"🕐 {t('card_timestamp')}", font=(FONT, 14, "bold"), text_color=TEXT).pack(side="left")
         
         self.ts_summary = ctk.CTkLabel(title_row, text="", font=(FONT, 11), text_color=MUTED, anchor="e")
         self.ts_summary.pack(side="right", fill="x", expand=True, padx=(20, 0))
@@ -1278,8 +1305,9 @@ class ScreenWatermarkApp(ctk.CTk):
         row1.grid_columnconfigure(2, weight=0, minsize=70)
         row1.grid_columnconfigure(3, weight=1)
         
-        ctk.CTkLabel(row1, text="Enable:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
-        self.ts_enable_menu = ctk.CTkOptionMenu(row1, values=["Off", "Outside"],
+        ctk.CTkLabel(row1, text=t("label_enable"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        self.ts_enable_menu = ctk.CTkOptionMenu(row1, 
+                                                values=[t("ts_off_mode"), t("ts_outside_mode")],
                                                 variable=self.ts_enable, font=(FONT, 13),
                                                 fg_color=BORDER, button_color=BORDER, button_hover_color=ACCENT,
                                                 dropdown_fg_color=PANEL, text_color=TEXT,
@@ -1287,7 +1315,7 @@ class ScreenWatermarkApp(ctk.CTk):
                                                 command=self._on_ts_enable_change)
         self.ts_enable_menu.grid(row=0, column=1, sticky="w", padx=(0, 24))
         
-        ctk.CTkLabel(row1, text="Format:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
+        ctk.CTkLabel(row1, text=t("label_format"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
         self.ts_format_menu = ctk.CTkOptionMenu(row1, values=["DD/MM/YYYY HH:MM:SS", "ISO"],
                                                 variable=self.ts_format_display, font=(FONT, 13),
                                                 fg_color=BORDER, button_color=BORDER, button_hover_color=ACCENT,
@@ -1303,13 +1331,13 @@ class ScreenWatermarkApp(ctk.CTk):
         row2.grid_columnconfigure(2, weight=0, minsize=70)
         row2.grid_columnconfigure(3, weight=1)
         
-        ctk.CTkLabel(row2, text="Text Color:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ctk.CTkLabel(row2, text=t("label_text_color"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 8))
         self.ts_color_btn = ctk.CTkButton(row2, text="", width=24, height=24, corner_radius=4,
                                             fg_color=self.ts_color.get(), hover_color=self.ts_color.get(),
                                             command=self._pick_ts_color)
         self.ts_color_btn.grid(row=0, column=1, sticky="w", padx=(0, 24))
         
-        ctk.CTkLabel(row2, text="Font Size:", font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
+        ctk.CTkLabel(row2, text=t("label_font_size"), font=(FONT, 13), text_color=MUTED).grid(row=0, column=2, sticky="w", padx=(0, 8))
         font_slider_frame = ctk.CTkFrame(row2, fg_color="transparent")
         font_slider_frame.grid(row=0, column=3, sticky="w")
         self.ts_font_slider = ctk.CTkSlider(font_slider_frame, from_=10, to=60, variable=self.ts_font_size,
@@ -1354,8 +1382,9 @@ class ScreenWatermarkApp(ctk.CTk):
 
     def _on_ts_enable_change(self, value):
         self.ts_enable.set(value)
+        ts_off_mode = t("ts_off_mode")
         
-        if value == "Off":
+        if value == ts_off_mode or value == "Off":
             self.ts_enabled.set(False)
             self.ts_outside_canvas.set(False)
         else:
@@ -1368,7 +1397,8 @@ class ScreenWatermarkApp(ctk.CTk):
 
     def _refresh_ts_controls(self):
         mode = self.ts_enable.get()
-        is_disabled = (mode == "Off")
+        ts_off_mode = t("ts_off_mode")
+        is_disabled = (mode == ts_off_mode or mode == "Off")
         
         if is_disabled:
             ctrl_state = "disabled"
@@ -1388,9 +1418,10 @@ class ScreenWatermarkApp(ctk.CTk):
             return
         
         mode = self.ts_enable.get()
+        ts_off_mode = t("ts_off_mode")
         
-        if mode == "Off":
-            self.ts_summary.configure(text="Off", text_color=ACCENT2)
+        if mode == ts_off_mode or mode == "Off":
+            self.ts_summary.configure(text=ts_off_mode, text_color=ACCENT2)
         else:
             size = f"{self.ts_font_size.get()}px"
             col = self.ts_color.get().upper()
@@ -1403,7 +1434,7 @@ class ScreenWatermarkApp(ctk.CTk):
 
     def _on_wm_mode_change(self, mode: str):
         self.wm_mode.set(mode)
-        self.wm_enabled.set(mode != "Off")
+        self.wm_enabled.set(mode != t("wm_off_mode") and mode != "Off")
         invalidate_wm_cache()
         self._refresh_wm_controls()
         self._update_wm_indicator()
