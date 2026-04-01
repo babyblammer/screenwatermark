@@ -41,6 +41,36 @@ import i18n
 from i18n import t
 
 
+def _show_toast(parent: "ctk.CTk", message: str, duration: int = 3000, color: tuple = None):
+    """Show a temporary toast notification."""
+    if color is None:
+        color = CARD
+    
+    toast = ctk.CTkToplevel(parent)
+    toast.overrideredirect(True)
+    toast.attributes("-topmost", True)
+    
+    w, h = 320, 40
+    x = parent.winfo_x() + (parent.winfo_width() - w) // 2
+    y = parent.winfo_y() + parent.winfo_height() - h - 20
+    toast.geometry(f"{w}x{h}+{x}+{y}")
+    
+    frame = ctk.CTkFrame(toast, fg_color=color, corner_radius=8)
+    frame.pack(fill="both", expand=True, padx=2, pady=2)
+    
+    label = ctk.CTkLabel(frame, text=message, font=(FONT, 11), text_color=TEXT)
+    label.pack(expand=True)
+    
+    def _fade_out():
+        for alpha in range(10, -1, -1):
+            toast.attributes("-alpha", alpha / 10)
+            toast.update()
+            toast.after(30)
+        toast.destroy()
+    
+    toast.after(duration, _fade_out)
+
+
 class ScreenWatermarkApp(ctk.CTk):
     VERSION = "4.1.0a"
 
@@ -396,6 +426,16 @@ class ScreenWatermarkApp(ctk.CTk):
         else:
             self.wm_indicator.configure(text=t("wm_active"), text_color=SUCCESS)
 
+    def _check_watermark_loading(self):
+        """Check if watermark can be loaded, show toast if it fails."""
+        path = self.watermark_path.get()
+        if not path:
+            return
+        from core.wm_cache import get_cached_watermark
+        wm = get_cached_watermark(path)
+        if wm is None:
+            _show_toast(self, t("wm_file_corrupt"), duration=4000, color=WARN)
+
     def _go_history_tab(self):
         """Switch to history tab."""
         self._switch_panel("history")
@@ -673,6 +713,8 @@ class ScreenWatermarkApp(ctk.CTk):
         except RuntimeError: pass
         if self._tray_icon:
             threading.Thread(target=self._tray_icon.stop, daemon=True).start()
+        self.last_image = None
+        self._history_tks.clear()
         self.after(300, self.destroy)
 
     # ── Screenshot flow ────────────────────────────────────────────────────────
@@ -1449,7 +1491,9 @@ class ScreenWatermarkApp(ctk.CTk):
     def _pick_watermark(self):
         from tkinter import filedialog
         path = filedialog.askopenfilename(title=t("select_area"), filetypes=[("Gambar", "*.png *.jpg *.jpeg *.gif *.bmp *.webp"), ("Semua", "*.*")])
-        if path: self.watermark_path.set(path)
+        if path:
+            self.watermark_path.set(path)
+            self._check_watermark_loading()
 
     def _update_ts_color_btn(self):
         if hasattr(self, "ts_color_btn"):

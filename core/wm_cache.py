@@ -6,12 +6,16 @@ Extracted from Screen Watermark_3.9.1f_HF1.py
 import os
 import threading
 import warnings
+from collections import OrderedDict
 from PIL import Image
 
-_wm_cache: dict        = {}
-_wm_resize_cache: dict = {}
-_wm_load_failed: set   = set()
-_wm_cache_lock         = threading.Lock()
+_WM_CACHE_MAX_SIZE = 5
+_WM_RESIZE_CACHE_MAX_SIZE = 32
+
+_wm_cache: "OrderedDict[str, Image.Image]" = OrderedDict()
+_wm_resize_cache: "OrderedDict[tuple, Image.Image]" = OrderedDict()
+_wm_load_failed: set = set()
+_wm_cache_lock = threading.Lock()
 
 def _safe_image_open(path: str) -> "Image.Image | None":
     """Open watermark image, suppress DecompressionBombWarning for corrupted files."""
@@ -23,22 +27,24 @@ def _safe_image_open(path: str) -> "Image.Image | None":
             return None
 
 def get_cached_watermark(path: str) -> "Image.Image | None":
-    """Return cached RGBA watermark (copy), reload jika path berubah.
-    Thread-safe: semua akses ke _wm_cache dilindungi _wm_cache_lock."""
+    """Return cached RGBA watermark (copy). Uses LRU eviction for original cache."""
     if not path:
         return None
     with _wm_cache_lock:
         if path in _wm_cache:
+            _wm_cache.move_to_end(path)
             return _wm_cache[path].copy()
         if path in _wm_load_failed:
             return None
         if not os.path.exists(path):
             return None
-        _wm_cache.clear()
         _wm_resize_cache.clear()
         _img = _safe_image_open(path)
         if _img:
             _wm_cache[path] = _img
+            _wm_cache.move_to_end(path)
+            while len(_wm_cache) > _WM_CACHE_MAX_SIZE:
+                _wm_cache.popitem(last=False)
             return _wm_cache[path].copy()
         _wm_load_failed.add(path)
         return None
@@ -51,13 +57,13 @@ def invalidate_wm_cache():
         _wm_load_failed.clear()
 
 def _get_wm_resized(path: str, new_w: int, new_h: int) -> "Image.Image | None":
-    """[P2] Cache watermark yang sudah di-resize per (path, w, h).
-    Thread-safe: dilindungi _wm_cache_lock."""
+    """Cache watermark that is resized per (path, w, h). Uses LRU eviction."""
     if not path:
         return None
     key = (path, new_w, new_h)
     with _wm_cache_lock:
         if key in _wm_resize_cache:
+            _wm_resize_cache.move_to_end(key)
             return _wm_resize_cache[key].copy()
         if path not in _wm_cache:
             if path in _wm_load_failed:
@@ -73,6 +79,7 @@ def _get_wm_resized(path: str, new_w: int, new_h: int) -> "Image.Image | None":
         orig = _wm_cache[path]
         resized = orig.resize((max(1, new_w), max(1, new_h)), Image.LANCZOS)
         _wm_resize_cache[key] = resized
-        if len(_wm_resize_cache) > 32:
-            _wm_resize_cache.pop(next(iter(_wm_resize_cache)))
+        _wm_resize_cache.move_to_end(key)
+        while len(_wm_resize_cache) > _WM_RESIZE_CACHE_MAX_SIZE:
+            _wm_resize_cache.popitem(last=False)
         return _wm_resize_cache[key].copy()

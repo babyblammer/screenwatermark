@@ -7,6 +7,7 @@ import base64 as _b64
 import io as _io
 import json
 import queue as _q
+import sys
 import threading
 import uuid
 import warnings

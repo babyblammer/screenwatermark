@@ -150,6 +150,9 @@ _STRINGS = {
         # Errors
         "error_reading_history": "Error reading from history",
         "screenshot_failed": "Screenshot failed: {err}",
+        "wm_load_failed": "Failed to load watermark",
+        "wm_format_unsupported": "Unsupported watermark format",
+        "wm_file_corrupt": "Watermark file is corrupted or invalid",
 
         # Region Selector
         "area_not_selected": "Area not selected",
@@ -335,6 +338,9 @@ _STRINGS = {
         # Errors
         "error_reading_history": "Gagal membaca riwayat",
         "screenshot_failed": "Tangkapan layar gagal: {err}",
+        "wm_load_failed": "Gagal memuat watermark",
+        "wm_format_unsupported": "Format watermark tidak didukung",
+        "wm_file_corrupt": "Berkas watermark rusak atau tidak valid",
 
         # Region Selector
         "area_not_selected": "Area belum dipilih",
