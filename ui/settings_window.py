@@ -322,13 +322,11 @@ class CreditsPopup(ctk.CTkToplevel):
 
         team_rows = [
             ("PM / QAPM", "Gayuh Marga H."),
-            ("Developer", "Claudeito Dimitri Anthropocic"),
-            ("UI/UX Lead", "Клодейто Димитри Антропосик"),
-            ("UI/UX Lead", "Gayuh Marga H."),
-            ("QA Lead", "Гаюх Марга Х."),
+            ("Developer", "Claude AI"),
+            ("Developer", "Big Pickle"),
+            ("QA Lead", "Gayuh Marga H.")
             ("Quality Assurance", "Rvbxxyn"),
-            ("Quality Assurance", "Ahmed Rubion"),
-            ("Quality Assurance", "Basmusin · Dimitry Anthropocic"),
+            ("Quality Assurance", "Ahmed Rubion")
         ]
 
         team_frame = ctk.CTkFrame(container, fg_color="transparent")
@@ -348,8 +346,7 @@ class CreditsPopup(ctk.CTkToplevel):
                                     font=(FONT, 13.5, "bold"), text_color=ACCENT,
                                     anchor="w")
         deps_section.pack(fill="x", pady=(0, 8))
-
-        deps_text = "pillow ✓   mss ✓   pystray ✓   pynput ✓   pywin32 ✓"
+        
         ctk.CTkLabel(container, text=deps_text,
                       font=(FONT_MONO, 10.5, "italic"), text_color=SUCCESS,
                      anchor="w"
