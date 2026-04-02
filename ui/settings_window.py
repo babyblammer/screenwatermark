@@ -27,7 +27,7 @@ class SettingsWindow(ctk.CTkToplevel):
     def __init__(self, master: "ScreenWatermarkApp"):
         super().__init__(master)
         self.app = master
-        self.title("Settings")
+        self.title(t("settings"))
         self.geometry("480x520")
         self.resizable(False, False)
         self.configure(fg_color=BG)
@@ -149,8 +149,8 @@ class SettingsWindow(ctk.CTkToplevel):
             if not ok:
                 app.run_at_startup.set(self._prev_startup[0])
                 from tkinter import messagebox
-                messagebox.showwarning("Startup",
-                    "Failed to set startup.\nMake sure you have sufficient permissions.",
+                messagebox.showwarning(t("startup"),
+                    f"{t('startup_status_not_registered')}\n{t('restart_required')}",
                     parent=self)
             else:
                 self._prev_startup[0] = new_val
@@ -177,10 +177,10 @@ class SettingsWindow(ctk.CTkToplevel):
         registered = get_run_at_startup()
         if registered:
             self.startup_status_lbl.configure(
-                text="\u2713 Registered in system startup.", text_color=SUCCESS)
+                text=f"\u2713 {t('startup_status_registered')}", text_color=SUCCESS)
         else:
             self.startup_status_lbl.configure(
-                text="\u25cb Not registered in system startup.", text_color=MUTED)
+                text=f"\u25cb {t('startup_status_not_registered')}", text_color=MUTED)
 
     # ── Capture card ──────────────────────────────────────────────────────────
     def _build_capture_card(self, p):
@@ -195,14 +195,14 @@ class SettingsWindow(ctk.CTkToplevel):
         info_box = ctk.CTkFrame(p, fg_color="#1a1a2e", corner_radius=6)
         info_box.pack(fill="x", pady=(0, 8))
         
-        ctk.CTkLabel(info_box, text="\u2328  Active Hotkeys",
+        ctk.CTkLabel(info_box, text=f"\u2328  {t('hotkeys_title')}",
                      font=(FONT, 13.5, "bold"), text_color=ACCENT
                      ).pack(anchor="w", padx=10, pady=6)
 
         hotkeys = [
-            ("Fullscreen Screenshot", app.hotkey_fullscreen),
-            ("Region Screenshot", app.hotkey_region),
-            ("Open History", app.hotkey_history),
+            (t("fullscreen_hotkey"), app.hotkey_fullscreen),
+            (t("region_hotkey"), app.hotkey_region),
+            (t("history_hotkey"), app.hotkey_history),
         ]
         
         for label, var in hotkeys:
@@ -218,7 +218,7 @@ class SettingsWindow(ctk.CTkToplevel):
                          text_color=ACCENT
                          ).pack(side="left", padx=6)
 
-        ctk.CTkLabel(p, text="App continues running in System Tray when window is closed.",
+        ctk.CTkLabel(p, text=t("hotkeys_note"),
                      font=(FONT, 10.5, "italic"), text_color=MUTED, anchor="w"
                      ).pack(anchor="w", pady=(10, 0))
 
@@ -226,14 +226,45 @@ class SettingsWindow(ctk.CTkToplevel):
     def _build_language_card(self, p):
         from i18n import get_language, set_language, t as tt
         
+        def _restart_app():
+            import sys
+            import subprocess
+            import time
+            import os
+            
+            python = sys.executable
+            
+            # Get the main script path
+            script_path = None
+            if len(sys.argv) > 0:
+                argv0 = sys.argv[0]
+                if argv0 and not argv0.startswith('-') and os.path.isfile(argv0):
+                    script_path = os.path.abspath(argv0)
+            
+            # Start new process
+            if script_path and os.path.exists(script_path):
+                work_dir = os.path.dirname(script_path)
+                subprocess.Popen([python, script_path], cwd=work_dir)
+            else:
+                subprocess.Popen([python, "-m", "main"], cwd=os.getcwd())
+            
+            time.sleep(0.5)
+            self.app._quit_app()
+        
         def on_language_change(lang):
+            from tkinter import messagebox
             lang_map = {"English": "en", "Indonesian": "id"}
             code = lang_map.get(lang, "en")
             set_language(code)
+            
             from core.settings import load_settings, save_settings
             cfg = load_settings()
             cfg["language"] = code
             save_settings(cfg)
+            
+            result = messagebox.askyesno(tt("confirm_restart"), tt("confirm_restart_msg"))
+            if result:
+                _restart_app()
         
         row = ctk.CTkFrame(p, fg_color=CARD)
         row.pack(fill="x", pady=(0, 4))
@@ -262,7 +293,7 @@ class CreditsPopup(ctk.CTkToplevel):
     def __init__(self, master):
         super().__init__(master)
         self.app = master.app
-        self.title("Credits")
+        self.title(t("credits_title"))
         self.geometry("400xauto")
         self.resizable(False, False)
         self.configure(fg_color=BG)
@@ -286,7 +317,7 @@ class CreditsPopup(ctk.CTkToplevel):
         app_info = ctk.CTkFrame(container, fg_color="transparent")
         app_info.pack(fill="x", pady=(0, 8))
 
-        ctk.CTkLabel(app_info, text="ScreenWatermark Pro",
+        ctk.CTkLabel(app_info, text=t("app_title"),
                      font=(FONT, 13.5, "bold"), text_color=TEXT
                      ).pack()
 
@@ -294,7 +325,7 @@ class CreditsPopup(ctk.CTkToplevel):
                       font=(FONT_MONO, 10.5, "italic"), text_color=MUTED
                      ).pack()
 
-        ctk.CTkLabel(app_info, text="Screenshot utility with watermark & timestamp overlay",
+        ctk.CTkLabel(app_info, text=t("credits_description"),
                      font=(FONT, 10.5, "italic"), text_color=MUTED
                      ).pack(pady=(2, 0))
 
@@ -306,10 +337,10 @@ class CreditsPopup(ctk.CTkToplevel):
         ctk.CTkLabel(license_info, text="© 2026 Pika25 Production",
                       font=(FONT_MONO, 10.5, "italic"), text_color=MUTED
                      ).pack()
-        ctk.CTkLabel(license_info, text="All rights reserved.",
+        ctk.CTkLabel(license_info, text=t("credits_copyright"),
                      font=(FONT, 10.5, "italic"), text_color=MUTED
                      ).pack()
-        ctk.CTkLabel(license_info, text="MIT License — Donationware",
+        ctk.CTkLabel(license_info, text=t("credits_license"),
                      font=(FONT, 13.5, "bold"), text_color=ACCENT
                      ).pack(pady=(4, 0))
 
@@ -324,7 +355,7 @@ class CreditsPopup(ctk.CTkToplevel):
             ("PM / QAPM", "Gayuh Marga H."),
             ("Developer", "Claude AI"),
             ("Developer", "Big Pickle"),
-            ("QA Lead", "Gayuh Marga H.")
+            ("QA Lead", "Gayuh Marga H."),
             ("Quality Assurance", "Rvbxxyn"),
             ("Quality Assurance", "Ahmed Rubion")
         ]
@@ -347,6 +378,7 @@ class CreditsPopup(ctk.CTkToplevel):
                                     anchor="w")
         deps_section.pack(fill="x", pady=(0, 8))
         
+        deps_text = "pillow, mss, pystray, pynput, pywin32, customtkinter, pywinstyles"
         ctk.CTkLabel(container, text=deps_text,
                       font=(FONT_MONO, 10.5, "italic"), text_color=SUCCESS,
                      anchor="w"
@@ -354,7 +386,7 @@ class CreditsPopup(ctk.CTkToplevel):
 
         self._sep(container)
 
-        ctk.CTkButton(container, text="Close", font=(FONT, 13, "bold"),
+        ctk.CTkButton(container, text=t("close"), font=(FONT, 13, "bold"),
                       fg_color=ACCENT, text_color="white", width=120,
                       command=self.destroy
                       ).pack(pady=(8, 0))

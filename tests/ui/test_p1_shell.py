@@ -60,30 +60,45 @@ class TestHeaderContent:
         assert _find(app), "App name not found in header"
 
     def test_wm_badge_on_with_file(self, app):
-        """TC-P1-005: WM badge shows 'WM ✓' when enabled and file set."""
+        """TC-P1-005: WM badge shows ACTIVE when enabled and file set."""
+        import time as time_module
+        app.wm_mode.set("Normal")  # Explicitly set mode to Normal (English)
         app.wm_enabled.set(True)
         app.watermark_path.set(str(TEST_WM_PATH))
+        app.update_idletasks()  # Process pending events
+        time_module.sleep(WAIT_SHORT)
         app._update_wm_indicator()
-        time.sleep(WAIT_SHORT)
+        time_module.sleep(WAIT_SHORT)
         badge_text = get_widget_text(app.wm_indicator)
-        assert "\u2713" in badge_text, f"Expected WM \u2713 badge, got: '{badge_text}'"
+        from i18n import t
+        assert t("wm_active") in badge_text, f"Expected WM ACTIVE badge, got: '{badge_text}'"
 
     def test_wm_badge_on_no_file(self, app):
         """TC-P1-006: WM badge shows warning when enabled but no file."""
+        import time as time_module
+        app.wm_mode.set("Normal")  # Explicitly set mode to Normal (English)
         app.wm_enabled.set(True)
         app.watermark_path.set("")
+        app.update_idletasks()  # Process pending events
+        time_module.sleep(WAIT_SHORT)
         app._update_wm_indicator()
-        time.sleep(WAIT_SHORT)
+        time_module.sleep(WAIT_SHORT)
         badge_text = get_widget_text(app.wm_indicator)
-        assert "\u26a0" in badge_text, f"Expected WM \u26a0 badge, got: '{badge_text}'"
+        from i18n import t
+        assert t("wm_warn") in badge_text, f"Expected WM warning badge, got: '{badge_text}'"
 
     def test_wm_badge_off(self, app):
         """TC-P1-007: WM badge shows 'WM OFF' when disabled."""
+        import time as time_module
+        app.wm_mode.set("Off")  # Explicitly set mode to Off (English)
         app.wm_enabled.set(False)
+        app.update_idletasks()  # Process pending events
+        time_module.sleep(WAIT_SHORT)
         app._update_wm_indicator()
-        time.sleep(WAIT_SHORT)
+        time_module.sleep(WAIT_SHORT)
         badge_text = get_widget_text(app.wm_indicator)
-        assert "OFF" in badge_text, f"Expected WM OFF, got: '{badge_text}'"
+        from i18n import t
+        assert t("wm_off") in badge_text, f"Expected WM OFF, got: '{badge_text}'"
 
     def test_settings_button_opens_window(self, app):
         """TC-P1-008: Settings button opens CTkToplevel."""

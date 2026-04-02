@@ -25,7 +25,7 @@ class TestConstantsImport:
         assert BG == "#0a0a10"
         assert PREVIEW_W == 320
         assert PREVIEW_H == 180
-        assert HISTORY_MAX == 5
+        assert HISTORY_MAX == 8  # v8.0: History stores 8 screenshots
 
     def test_palette_values_are_hex(self):
         """TC-M1-001b: All palette constants are valid 7-char hex strings."""

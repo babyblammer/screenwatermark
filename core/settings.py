@@ -12,7 +12,7 @@ DEFAULT_SETTINGS = {
     "watermark_path":    "",
     "wm_enabled":        True,
     "wm_mode":           "normal",
-    "wm_position":       "bottom-left",
+    "wm_position":       "center",
     "wm_opacity":        70,
     "wm_scale":          20,
     "wm_pattern_gap":     20,

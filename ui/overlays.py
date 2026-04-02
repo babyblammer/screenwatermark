@@ -7,6 +7,7 @@ Note: These classes use pure tkinter (not CTk) due to overrideredirect() require
 import tkinter as tk
 from core.constants import ACCENT, TEXT, MUTED, BORDER
 from system.hotkeys import _ensure_pynput, _pynput_kb
+from i18n import t
 
 class CountdownOverlay(tk.Toplevel):
     """
@@ -47,14 +48,14 @@ class CountdownOverlay(tk.Toplevel):
 
         # Sub-teks atas
         tk.Label(self,
-                 text="Screenshot dalam...",
+                 text=t("countdown_top"),
                  font=("Segoe UI", 18),
                  bg="#0a0a10", fg="#7070a0"
                  ).place(relx=0.5, rely=0.30, anchor="center")
 
         # Sub-teks bawah
         tk.Label(self,
-                 text="Tekan  Esc  untuk batal",
+                 text=t("countdown_bottom"),
                  font=("Segoe UI", 13),
                  bg="#0a0a10", fg="#4a4a6a"
                  ).place(relx=0.5, rely=0.62, anchor="center")
@@ -146,7 +147,7 @@ class RegionSelector(tk.Toplevel):
         self.canvas.pack(fill="both", expand=True)
 
         self.canvas.create_text(sw//2, sh//2,
-            text="Klik dan seret untuk memilih area\nEscape = Batal",
+            text=t("overlay_region_hint"),
             fill="white", font=("Segoe UI", 14, "bold"),
             justify="center", tags="hint")
 
